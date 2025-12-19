@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>QC Control - Ultra Estable PRO</title>
+    <title>QC Control - Nueva Base Datos</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #002b36; color: white; margin: 0; padding: 15px; }
         .user-bar { background: #073642; padding: 10px; display: flex; justify-content: space-between; border-bottom: 2px solid #268bd2; align-items: center; }
@@ -11,31 +11,23 @@
         .tab-btn.active { background: #859900; }
         .view { display: none; }
         .view.active { display: block; }
-        
         #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #002b36; z-index: 1000; display: flex; justify-content: center; align-items: center; }
         .login-box { background: #073642; padding: 40px; border: 1px solid #268bd2; text-align: center; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
         .login-box input { display: block; margin: 15px auto; padding: 12px; width: 260px; border-radius: 4px; border: none; font-size: 16px; }
         .btn-login { background: #859900; color: white; padding: 12px 60px; border: none; cursor: pointer; font-weight: bold; border-radius: 4px; font-size: 16px; }
-
         .top-bar { display: grid; grid-template-columns: 1fr 2fr 1fr; align-items: center; background: #073642; padding: 15px; border-radius: 8px; margin-bottom: 20px; gap: 20px; }
         .input-lote { padding: 12px; border-radius: 4px; border: none; width: 280px; font-size: 16px; font-weight: bold; }
-        
         .dashboard { display: flex; gap: 10px; }
         .column { background: #073642; width: 33.33%; min-height: 600px; border-radius: 5px; border: 1px solid #586e75; }
         .column h2 { text-align: center; font-size: 14px; background: #002b36; margin: 0; padding: 12px; color: #93a1a1; }
-        
-        /* DISEÑO DE BOTONES ORIGINALES (ANCHOS Y LETRA BLANCA) */
         .card { background: white; color: #333; margin: 12px; padding: 15px; border-radius: 4px; border-left: 6px solid #268bd2; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         .card h3 { margin: 0 0 5px 0; font-size: 18px; color: #000; font-weight: 800; }
         .card p { margin: 2px 0; font-size: 14px; color: #333; }
-        
         .btn-action { width: 100%; margin-top: 10px; padding: 12px; border: none; color: white; cursor: pointer; font-weight: 900; border-radius: 4px; font-size: 14px; text-transform: uppercase; }
         .btn-delete { position: absolute; top: 5px; right: 5px; background: none; border: none; color: #ccc; cursor: pointer; font-size: 18px; }
-        
         .resumen-tiempos { background: #f8f9fa; padding: 10px; border-radius: 4px; margin-top: 10px; border: 1px solid #dee2e6; }
         .linea-tiempo { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; border-bottom: 1px dashed #ddd; padding-bottom: 2px; }
         .tiempo-final-bold { font-weight: 800; color: #28a745; font-size: 15px; border-top: 1px solid #333; padding-top: 5px; margin-top: 5px; }
-
         table { width: 100%; background: white; color: #333; border-collapse: collapse; }
         th, td { border: 1px solid #ccc; padding: 10px; text-align: center; font-size: 12px; }
     </style>
@@ -71,7 +63,6 @@
         </div>
         <button onclick="limpiarConClave()" style="background:#dc3545; color:white; border:none; padding:10px; border-radius:4px; cursor:pointer; font-weight:bold;">LIMPIAR</button>
     </div>
-    
     <div class="dashboard">
         <div class="column"><h2>📥 ESPERA</h2><div id="id-espera"></div></div>
         <div class="column"><h2>🔍 REVISIÓN</h2><div id="id-proceso"></div></div>
@@ -83,9 +74,7 @@
     <div style="padding:10px;">
         <button onclick="exportarCSV()" style="background:#859900; color:white; padding:10px 20px; border:none; border-radius:4px; margin-bottom:10px; cursor:pointer;">📊 EXCEL</button>
         <table>
-            <thead>
-                <tr><th>Fecha</th><th>Lote</th><th>Inspector</th><th>T. Espera</th><th>T. Revisión</th><th>T. Total</th></tr>
-            </thead>
+            <thead><tr><th>Fecha</th><th>Lote</th><th>Inspector</th><th>T. Espera</th><th>T. Revisión</th><th>T. Total</th></tr></thead>
             <tbody id="cuerpoHistorial"></tbody>
         </table>
     </div>
@@ -93,12 +82,10 @@
 
 <script>
     const CLAVE_ADMIN = "1234"; 
-    const USUARIOS_AUTORIZADOS = [
-        { nombre: "MARLON CESPEDES", id: "584" },
-        { nombre: "ADMIN", id: "0000" }
-    ];
-
-    const URL_NUBE = "https://script.google.com/macros/s/AKfycbxFk7zH19OaP4p8r-POxV36Hg698e5k_OOcpV61yIK9uMj3mwN1w4eoD5thkq783mRjxg/exec";
+    const USUARIOS_AUTORIZADOS = [{ nombre: "MARLON CESPEDES", id: "584" }, { nombre: "ADMIN", id: "0000" }];
+    
+    // --- TU NUEVA BASE DE DATOS AQUÍ ---
+    const URL_NUBE = "https://script.google.com/macros/s/AKfycbxppYXq7hL0r541VHPRW4KjKIf_9jmT6s6ivKSNQVBDkLM2d-k3PXDjaLSnjiQsh-hcgQ/exec";
     const URL_TEAMS = "https://default1687bd898f004ac48a85fff50aefa6.c5.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/0f16c956c99b4582b6b39f3b2b2f8373/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=loErLoCZovfhnCLsw7uxY6F-bLQrnoD-StMZU9sxpOs";
 
     let pausaSincro = false;
@@ -109,22 +96,8 @@
         return `${Math.floor(s / 60)}m ${s % 60}s`;
     }
 
-    // --- LÓGICA DE TEAMS RESTAURADA ---
     async function enviarTeams(lote) {
-        const body = {
-            "type": "message",
-            "attachments": [{
-                "contentType": "application/vnd.microsoft.card.adaptive",
-                "content": {
-                    "type": "AdaptiveCard",
-                    "body": [
-                        {"type": "TextBlock", "text": "📢 LOTE REGISTRADO", "weight": "Bolder", "color": "Accent"},
-                        {"type": "FactSet", "facts": [{"title": "Lote:", "value": lote}, {"title": "Inspector:", "value": localStorage.getItem('qc_user')}]}
-                    ],
-                    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json", "version": "1.4"
-                }
-            }]
-        };
+        const body = { "type": "message", "attachments": [{ "contentType": "application/vnd.microsoft.card.adaptive", "content": { "type": "AdaptiveCard", "body": [{"type": "TextBlock", "text": "📢 LOTE REGISTRADO", "weight": "Bolder", "color": "Accent"},{"type": "FactSet", "facts": [{"title": "Lote:", "value": lote}, {"title": "Inspector:", "value": localStorage.getItem('qc_user')}]}], "$schema": "http://adaptivecards.io/schemas/adaptive-card.json", "version": "1.4" }}]};
         fetch(URL_TEAMS, { method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } }).catch(() => {});
     }
 
@@ -148,8 +121,7 @@
         div.innerHTML = `<button class="btn-delete" onclick="eliminarLote(this)">✕</button><h3>LOTE: ${lote}</h3><p>Inspector: ${localStorage.getItem('qc_user')}</p><div class="resumen-tiempos"><div class="linea-tiempo"><span>⏱ Espera:</span> <span class="cronometro">0m 0s</span></div></div><button class="btn-action" style="background:#859900;" onclick="tomar(this, '${lote}')">TOMAR LOTE</button>`;
         document.getElementById('id-espera').appendChild(div);
         document.getElementById('loteIn').value = "";
-        
-        enviarTeams(lote); // Llamada a Teams
+        enviarTeams(lote);
         guardarNube();
     }
 
@@ -182,7 +154,10 @@
         guardarNube();
     }
 
-    function activarPausa() { pausaSincro = true; setTimeout(() => { pausaSincro = false; }, 4000); }
+    function activarPausa() { 
+        pausaSincro = true; 
+        setTimeout(() => { pausaSincro = false; }, 6000); // Pausa extendida a 6 segundos para mayor estabilidad
+    }
 
     function guardarNube() {
         const data = { e: document.getElementById('id-espera').innerHTML, p: document.getElementById('id-proceso').innerHTML, t: document.getElementById('id-terminado').innerHTML, h: document.getElementById('cuerpoHistorial').innerHTML };
@@ -201,7 +176,6 @@
         } catch(e) {}
     }
 
-    // LIMPIEZA AUTOMÁTICA 4:00 AM
     function verificarLimpiezaAutomatica() {
         const ahora = new Date();
         if (ahora.getHours() === 4 && ahora.getMinutes() === 0) {
@@ -218,7 +192,7 @@
             document.getElementById('display-id').innerText = localStorage.getItem('qc_id');
             cargarDatosNube(); 
             setInterval(cargarDatosNube, 5000);
-            setInterval(verificarLimpiezaAutomatica, 60000); // Revisar cada minuto
+            setInterval(verificarLimpiezaAutomatica, 60000);
             setInterval(() => {
                 document.querySelectorAll('.card').forEach(c => {
                     const inicio = c.getAttribute('data-reloj-inicio');
