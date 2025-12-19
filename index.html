@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>QC Control - Ultra Estable</title>
+    <title>QC Control - Ultra Estable PRO</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #002b36; color: white; margin: 0; padding: 15px; }
         .user-bar { background: #073642; padding: 10px; display: flex; justify-content: space-between; border-bottom: 2px solid #268bd2; align-items: center; }
@@ -24,6 +24,7 @@
         .column { background: #073642; width: 33.33%; min-height: 600px; border-radius: 5px; border: 1px solid #586e75; }
         .column h2 { text-align: center; font-size: 14px; background: #002b36; margin: 0; padding: 12px; color: #93a1a1; }
         
+        /* DISEÑO DE BOTONES ORIGINALES (ANCHOS Y LETRA BLANCA) */
         .card { background: white; color: #333; margin: 12px; padding: 15px; border-radius: 4px; border-left: 6px solid #268bd2; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         .card h3 { margin: 0 0 5px 0; font-size: 18px; color: #000; font-weight: 800; }
         .card p { margin: 2px 0; font-size: 14px; color: #333; }
@@ -43,9 +44,9 @@
 
 <div id="login-overlay">
     <div class="login-box">
-        <h2 style="color:#268bd2">QC CONTROL</h2>
+        <h2 style="color:#268bd2">QC CONTROL LOGIN</h2>
         <input type="text" id="userName" placeholder="Nombre Completo">
-        <input type="password" id="userId" placeholder="ID (ID)">
+        <input type="password" id="userId" placeholder="ID de Empleado">
         <button class="btn-login" onclick="iniciarSesion()">ACCEDER</button>
         <p id="error-login" style="color:#dc3545; font-size:12px; margin-top:10px; display:none;">⚠️ Datos incorrectos.</p>
     </div>
@@ -80,7 +81,7 @@
 
 <div id="historial" class="view">
     <div style="padding:10px;">
-        <button onclick="exportarCSV()" style="background:#859900; color:white; padding:10px 20px; border:none; border-radius:4px; margin-bottom:10px; cursor:pointer;">📊 DESCARGAR EXCEL</button>
+        <button onclick="exportarCSV()" style="background:#859900; color:white; padding:10px 20px; border:none; border-radius:4px; margin-bottom:10px; cursor:pointer;">📊 EXCEL</button>
         <table>
             <thead>
                 <tr><th>Fecha</th><th>Lote</th><th>Inspector</th><th>T. Espera</th><th>T. Revisión</th><th>T. Total</th></tr>
@@ -92,7 +93,11 @@
 
 <script>
     const CLAVE_ADMIN = "1234"; 
-    const USUARIOS_AUTORIZADOS = [{ nombre: "MARLON CESPEDES", id: "584" }, { nombre: "ADMIN", id: "0000" }, { nombre: "JORDAN MURILLO", id: "594" }];
+    const USUARIOS_AUTORIZADOS = [
+        { nombre: "MARLON CESPEDES", id: "584" },
+        { nombre: "ADMIN", id: "0000" }
+    ];
+
     const URL_NUBE = "https://script.google.com/macros/s/AKfycbxFk7zH19OaP4p8r-POxV36Hg698e5k_OOcpV61yIK9uMj3mwN1w4eoD5thkq783mRjxg/exec";
     const URL_TEAMS = "https://default1687bd898f004ac48a85fff50aefa6.c5.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/0f16c956c99b4582b6b39f3b2b2f8373/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=loErLoCZovfhnCLsw7uxY6F-bLQrnoD-StMZU9sxpOs";
 
@@ -102,6 +107,25 @@
         if(!ms || ms < 0) return "0m 0s";
         let s = Math.floor(ms / 1000);
         return `${Math.floor(s / 60)}m ${s % 60}s`;
+    }
+
+    // --- LÓGICA DE TEAMS RESTAURADA ---
+    async function enviarTeams(lote) {
+        const body = {
+            "type": "message",
+            "attachments": [{
+                "contentType": "application/vnd.microsoft.card.adaptive",
+                "content": {
+                    "type": "AdaptiveCard",
+                    "body": [
+                        {"type": "TextBlock", "text": "📢 LOTE REGISTRADO", "weight": "Bolder", "color": "Accent"},
+                        {"type": "FactSet", "facts": [{"title": "Lote:", "value": lote}, {"title": "Inspector:", "value": localStorage.getItem('qc_user')}]}
+                    ],
+                    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json", "version": "1.4"
+                }
+            }]
+        };
+        fetch(URL_TEAMS, { method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } }).catch(() => {});
     }
 
     function iniciarSesion() {
@@ -125,7 +149,7 @@
         document.getElementById('id-espera').appendChild(div);
         document.getElementById('loteIn').value = "";
         
-        fetch(URL_TEAMS, { method: 'POST', body: JSON.stringify({"text": `Nuevo Lote: ${lote}`}), headers: {'Content-Type': 'application/json'} }).catch(()=>{});
+        enviarTeams(lote); // Llamada a Teams
         guardarNube();
     }
 
@@ -177,12 +201,24 @@
         } catch(e) {}
     }
 
+    // LIMPIEZA AUTOMÁTICA 4:00 AM
+    function verificarLimpiezaAutomatica() {
+        const ahora = new Date();
+        if (ahora.getHours() === 4 && ahora.getMinutes() === 0) {
+            document.getElementById('id-terminado').innerHTML = "";
+            document.getElementById('cuerpoHistorial').innerHTML = "";
+            guardarNube();
+        }
+    }
+
     function verificarSession() {
         if(localStorage.getItem('qc_user')) {
             document.getElementById('login-overlay').style.display = 'none';
             document.getElementById('display-user').innerText = localStorage.getItem('qc_user');
             document.getElementById('display-id').innerText = localStorage.getItem('qc_id');
-            cargarDatosNube(); setInterval(cargarDatosNube, 5000);
+            cargarDatosNube(); 
+            setInterval(cargarDatosNube, 5000);
+            setInterval(verificarLimpiezaAutomatica, 60000); // Revisar cada minuto
             setInterval(() => {
                 document.querySelectorAll('.card').forEach(c => {
                     const inicio = c.getAttribute('data-reloj-inicio');
@@ -214,5 +250,4 @@
     }
 </script>
 </body>
-
 </html>
