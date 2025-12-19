@@ -2,9 +2,10 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>QC Control Pro - Full</title>
+    <title>QC Control Pro - Seguridad</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #002b36; color: white; margin: 0; padding: 15px; }
+        /* Estilos Base */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #002b36; color: white; margin: 0; padding: 15px; }
         .user-bar { background: #073642; padding: 10px; display: flex; justify-content: space-between; border-bottom: 2px solid #268bd2; align-items: center; }
         .tabs { display: flex; justify-content: center; gap: 10px; margin: 15px 0; }
         .tab-btn { padding: 10px 25px; cursor: pointer; background: #586e75; border: none; color: white; font-weight: bold; border-radius: 4px; }
@@ -12,47 +13,46 @@
         .view { display: none; }
         .view.active { display: block; }
         
+        /* Login Estilo Original (Mejorado) */
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #002b36; z-index: 1000; display: flex; justify-content: center; align-items: center; }
+        .login-box { background: #073642; padding: 40px; border: 1px solid #268bd2; text-align: center; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .login-box h2 { color: #268bd2; margin-bottom: 20px; font-size: 24px; }
+        .login-box input { display: block; margin: 15px auto; padding: 12px; width: 260px; border-radius: 4px; border: none; font-size: 16px; }
+        .btn-login { background: #859900; color: white; padding: 12px 60px; border: none; cursor: pointer; font-weight: bold; border-radius: 4px; font-size: 16px; transition: 0.3s; }
+        .btn-login:hover { background: #b58900; }
+
+        /* Dashboard y Tarjetas */
         .top-bar { display: grid; grid-template-columns: 1fr 2fr 1fr; align-items: center; background: #073642; padding: 15px; border-radius: 8px; margin-bottom: 20px; gap: 20px; }
-        .registro-central { text-align: center; display: flex; justify-content: center; gap: 10px; }
         .input-lote { padding: 12px; border-radius: 4px; border: none; width: 280px; font-size: 16px; font-weight: bold; }
-        
         .dashboard { display: flex; gap: 10px; }
         .column { background: #073642; width: 33.33%; min-height: 600px; border-radius: 5px; border: 1px solid #586e75; }
         .column h2 { text-align: center; font-size: 14px; background: #002b36; margin: 0; padding: 12px; color: #93a1a1; }
         
-        .card { background: white; color: #333; margin: 12px; padding: 15px; border-radius: 4px; border-left: 6px solid #268bd2; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        .card h3 { margin: 0 0 5px 0; font-size: 18px; color: #000; font-weight: 800; }
-        .card p { margin: 2px 0; font-size: 13px; color: #555; }
-        
-        .btn-action { width: 100%; margin-top: 10px; padding: 10px; border: none; color: white; cursor: pointer; font-weight: bold; border-radius: 4px; }
-        .btn-delete { position: absolute; top: 5px; right: 5px; background: none; border: none; color: #ccc; cursor: pointer; font-size: 16px; }
-        
-        .resumen-tiempos { background: #f8f9fa; padding: 10px; border-radius: 4px; margin-top: 10px; border: 1px solid #dee2e6; }
-        .linea-tiempo { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; border-bottom: 1px dashed #ddd; padding-bottom: 2px; }
-        .tiempo-final-bold { font-weight: 800; color: #28a745; font-size: 15px; border-top: 1px solid #333; padding-top: 5px; margin-top: 5px; }
+        .card { background: white; color: #333; margin: 12px; padding: 15px; border-radius: 4px; border-left: 6px solid #268bd2; position: relative; }
+        .card h3 { margin: 0 0 5px 0; font-size: 18px; font-weight: 800; }
+        .resumen-tiempos { background: #f8f9fa; padding: 8px; border-radius: 4px; margin-top: 10px; border: 1px solid #dee2e6; font-size: 13px; }
+        .linea-tiempo { display: flex; justify-content: space-between; border-bottom: 1px dashed #ddd; padding: 2px 0; }
+        .tiempo-final-bold { font-weight: 800; color: #28a745; border-top: 1px solid #333; margin-top: 5px; }
 
-        table { width: 100%; background: white; color: #333; border-collapse: collapse; margin-top: 10px; }
+        table { width: 100%; background: white; color: #333; border-collapse: collapse; }
         th, td { border: 1px solid #ccc; padding: 10px; text-align: center; font-size: 12px; }
-        th { background: #eee; }
-
-        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #002b36; z-index: 1000; display: flex; justify-content: center; align-items: center; }
-        .login-box { background: #073642; padding: 40px; border-radius: 8px; text-align: center; }
     </style>
 </head>
 <body onload="verificarSession()">
 
 <div id="login-overlay">
     <div class="login-box">
-        <h2 style="color:#268bd2">QC CONTROL</h2>
-        <input type="text" id="userName" placeholder="Nombre">
-        <input type="text" id="userId" placeholder="ID">
-        <button onclick="iniciarSesion()" style="background:#859900; color:white; padding:12px 60px; border:none; border-radius:4px; cursor:pointer;">ACCEDER</button>
+        <h2>QC CONTROL LOGIN</h2>
+        <input type="text" id="userName" placeholder="Nombre Completo">
+        <input type="password" id="userId" placeholder="ID de Empleado">
+        <button class="btn-login" onclick="iniciarSesion()">ACCEDER</button>
+        <p id="error-login" style="color:#dc3545; font-size:12px; margin-top:10px; display:none;">⚠️ Datos incorrectos o no autorizados.</p>
     </div>
 </div>
 
 <div class="user-bar">
     <span>👤 <strong id="display-user"></strong> (ID: <strong id="display-id"></strong>)</span>
-    <button onclick="cerrarSesion()" style="background:#dc3545; color:white; border:none; padding:5px 15px; border-radius:4px; cursor:pointer;">SALIR</button>
+    <button onclick="cerrarSesion()" style="background:#dc3545; color:white; border:none; padding:5px 15px; border-radius:4px; cursor:pointer;">CERRAR SESIÓN</button>
 </div>
 
 <div class="tabs">
@@ -62,12 +62,12 @@
 
 <div id="flujo" class="view active">
     <div class="top-bar">
-        <input type="text" id="searchFlujo" placeholder="🔍 Buscar..." oninput="filtrarFlujo()">
+        <input type="text" id="searchFlujo" placeholder="🔍 Buscar lote..." style="padding:10px; border-radius:4px;" oninput="filtrarFlujo()">
         <div class="registro-central">
             <input type="text" id="loteIn" class="input-lote" placeholder="ESCRIBIR LOTE..." onkeypress="if(event.key==='Enter') agregarLote()">
             <button onclick="agregarLote()" style="padding:11px 25px; background:#268bd2; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">REGISTRAR</button>
         </div>
-        <button onclick="limpiarTablero()" style="background:#dc3545; color:white; border:none; padding:10px; border-radius:4px; cursor:pointer;">🗑️ LIMPIAR</button>
+        <button onclick="limpiarConClave()" style="background:#dc3545; color:white; border:none; padding:10px; border-radius:4px; cursor:pointer; font-weight:bold;">🗑️ LIMPIAR TABLERO</button>
     </div>
     
     <div class="dashboard">
@@ -79,7 +79,7 @@
 
 <div id="historial" class="view">
     <div style="padding:10px;">
-        <button onclick="exportarCSV()" style="background:#859900; color:white; padding:10px 20px; border:none; border-radius:4px; margin-bottom:10px; cursor:pointer;">📊 DESCARGAR EXCEL</button>
+        <button onclick="exportarCSV()" style="background:#859900; color:white; padding:10px 20px; border:none; border-radius:4px; margin-bottom:10px; cursor:pointer;">📊 EXPORTAR EXCEL</button>
         <table>
             <thead>
                 <tr><th>Fecha</th><th>Lote</th><th>Inspector</th><th>T. Espera</th><th>T. Revisión</th><th>T. Total</th></tr>
@@ -90,9 +90,52 @@
 </div>
 
 <script>
+    // --- CONFIGURACIÓN DE SEGURIDAD ---
+    const CLAVE_ADMIN = "1234"; // Cambia esta clave para poder usar el botón Limpiar
+    
+    // BASE DE DATOS DE USUARIOS AUTORIZADOS
+    const USUARIOS_AUTORIZADOS = [
+        { nombre: "Marlon Cespedes", id: "1001" },
+        { nombre: "Admin", id: "0000" },
+        { nombre: "Inspector 1", id: "5555" }
+        // Agrega aquí más nombres e IDs exactos
+    ];
+
     const URL_NUBE = "https://script.google.com/macros/s/AKfycbxFk7zH19OaP4p8r-POxV36Hg698e5k_OOcpV61yIK9uMj3mwN1w4eoD5thkq783mRjxg/exec";
     const URL_TEAMS = "https://default1687bd898f004ac48a85fff50aefa6.c5.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/0f16c956c99b4582b6b39f3b2b2f8373/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=loErLoCZovfhnCLsw7uxY6F-bLQrnoD-StMZU9sxpOs";
 
+    // --- LÓGICA DE INICIO DE SESIÓN ---
+    function iniciarSesion() {
+        const u = document.getElementById('userName').value.trim();
+        const i = document.getElementById('userId').value.trim();
+        
+        // Validar contra la "Base de Datos"
+        const validado = USUARIOS_AUTORIZADOS.find(user => user.nombre === u && user.id === i);
+
+        if(validado) {
+            localStorage.setItem('qc_user', u);
+            localStorage.setItem('qc_id', i);
+            location.reload();
+        } else {
+            document.getElementById('error-login').style.display = 'block';
+        }
+    }
+
+    // --- SEGURIDAD BOTÓN LIMPIAR ---
+    function limpiarConClave() {
+        const pass = prompt("Ingrese la clave de Administrador para borrar todo el tablero:");
+        if(pass === CLAVE_ADMIN) {
+            document.getElementById('id-espera').innerHTML=""; 
+            document.getElementById('id-proceso').innerHTML=""; 
+            document.getElementById('id-terminado').innerHTML=""; 
+            guardarNube();
+            alert("Tablero limpiado con éxito.");
+        } else if(pass !== null) {
+            alert("Clave incorrecta. Acción cancelada.");
+        }
+    }
+
+    // --- EL RESTO DE FUNCIONES (MANTIENEN EL DESGLOSE DE TIEMPOS) ---
     function formatTime(ms) {
         if(!ms || ms < 0) return "0m 0s";
         let s = Math.floor(ms / 1000);
@@ -114,7 +157,7 @@
                 }
             }]
         };
-        fetch(URL_TEAMS, { method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } }).catch(e => console.log(e));
+        fetch(URL_TEAMS, { method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } }).catch(() => {});
     }
 
     function agregarLote() {
@@ -134,7 +177,7 @@
             </div>
             <button class="btn-action" style="background:#859900;" onclick="tomar(this, '${lote}')">TOMAR LOTE</button>`;
         document.getElementById('id-espera').appendChild(div);
-        enviarTeams(lote); // ALERTA ACTIVADA
+        enviarTeams(lote);
         document.getElementById('loteIn').value = "";
         guardarNube();
     }
@@ -181,11 +224,6 @@
         guardarNube();
     }
 
-    function iniciarSesion() {
-        const u = document.getElementById('userName').value;
-        const i = document.getElementById('userId').value;
-        if(u && i) { localStorage.setItem('qc_user', u); localStorage.setItem('qc_id', i); location.reload(); }
-    }
     function verificarSession() {
         if(localStorage.getItem('qc_user')) {
             document.getElementById('login-overlay').style.display = 'none';
@@ -224,12 +262,6 @@
         document.getElementById(id).classList.add('active'); btn.classList.add('active');
     }
     function eliminarLote(btn) { if(confirm("¿Eliminar?")) { btn.closest('.card').remove(); guardarNube(); } }
-    function limpiarTablero() { if(confirm("¿Limpiar todo?")) { 
-        document.getElementById('id-espera').innerHTML=""; 
-        document.getElementById('id-proceso').innerHTML=""; 
-        document.getElementById('id-terminado').innerHTML=""; 
-        guardarNube(); 
-    } }
     function exportarCSV() {
         let csv = "\uFEFF";
         document.querySelectorAll("table tr").forEach(f => {
@@ -237,7 +269,7 @@
         });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
-        link.download = "Reporte_QC.csv";
+        link.download = "Reporte_QC_Seguro.csv";
         link.click();
     }
     function filtrarFlujo() {
