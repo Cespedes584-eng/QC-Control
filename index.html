@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>QC Control Pro - Sin Delay</title>
+    <title>QC Control - Ultra Estable</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #002b36; color: white; margin: 0; padding: 15px; }
         .user-bar { background: #073642; padding: 10px; display: flex; justify-content: space-between; border-bottom: 2px solid #268bd2; align-items: center; }
@@ -14,7 +14,6 @@
         
         #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #002b36; z-index: 1000; display: flex; justify-content: center; align-items: center; }
         .login-box { background: #073642; padding: 40px; border: 1px solid #268bd2; text-align: center; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-        .login-box h2 { color: #268bd2; margin-bottom: 20px; }
         .login-box input { display: block; margin: 15px auto; padding: 12px; width: 260px; border-radius: 4px; border: none; font-size: 16px; }
         .btn-login { background: #859900; color: white; padding: 12px 60px; border: none; cursor: pointer; font-weight: bold; border-radius: 4px; font-size: 16px; }
 
@@ -25,7 +24,7 @@
         .column { background: #073642; width: 33.33%; min-height: 600px; border-radius: 5px; border: 1px solid #586e75; }
         .column h2 { text-align: center; font-size: 14px; background: #002b36; margin: 0; padding: 12px; color: #93a1a1; }
         
-        .card { background: white; color: #333; margin: 12px; padding: 15px; border-radius: 4px; border-left: 6px solid #268bd2; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: transform 0.1s; }
+        .card { background: white; color: #333; margin: 12px; padding: 15px; border-radius: 4px; border-left: 6px solid #268bd2; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         .card h3 { margin: 0 0 5px 0; font-size: 18px; color: #000; font-weight: 800; }
         .card p { margin: 2px 0; font-size: 14px; color: #333; }
         
@@ -38,16 +37,15 @@
 
         table { width: 100%; background: white; color: #333; border-collapse: collapse; }
         th, td { border: 1px solid #ccc; padding: 10px; text-align: center; font-size: 12px; }
-        th { background: #eee; }
     </style>
 </head>
 <body onload="verificarSession()">
 
 <div id="login-overlay">
     <div class="login-box">
-        <h2>QC CONTROL LOGIN</h2>
+        <h2 style="color:#268bd2">QC CONTROL</h2>
         <input type="text" id="userName" placeholder="Nombre Completo">
-        <input type="password" id="userId" placeholder="ID de Empleado">
+        <input type="password" id="userId" placeholder="ID (Marlon: 584)">
         <button class="btn-login" onclick="iniciarSesion()">ACCEDER</button>
         <p id="error-login" style="color:#dc3545; font-size:12px; margin-top:10px; display:none;">⚠️ Datos incorrectos.</p>
     </div>
@@ -65,12 +63,12 @@
 
 <div id="flujo" class="view active">
     <div class="top-bar">
-        <input type="text" id="searchFlujo" placeholder="🔍 Buscar lote..." style="padding:10px; border-radius:4px;" oninput="filtrarFlujo()">
+        <input type="text" id="searchFlujo" placeholder="🔍 Buscar lote..." oninput="filtrarFlujo()" style="padding:10px; border-radius:4px;">
         <div class="registro-central">
             <input type="text" id="loteIn" class="input-lote" placeholder="ESCRIBIR LOTE..." onkeypress="if(event.key==='Enter') agregarLote()">
             <button onclick="agregarLote()" style="padding:11px 25px; background:#268bd2; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">REGISTRAR</button>
         </div>
-        <button onclick="limpiarConClave()" style="background:#dc3545; color:white; border:none; padding:10px; border-radius:4px; cursor:pointer; font-weight:bold;">🗑️ LIMPIAR</button>
+        <button onclick="limpiarConClave()" style="background:#dc3545; color:white; border:none; padding:10px; border-radius:4px; cursor:pointer; font-weight:bold;">LIMPIAR</button>
     </div>
     
     <div class="dashboard">
@@ -82,7 +80,7 @@
 
 <div id="historial" class="view">
     <div style="padding:10px;">
-        <button onclick="exportarCSV()" style="background:#859900; color:white; padding:10px 20px; border:none; border-radius:4px; margin-bottom:10px; cursor:pointer;">📊 EXCEL</button>
+        <button onclick="exportarCSV()" style="background:#859900; color:white; padding:10px 20px; border:none; border-radius:4px; margin-bottom:10px; cursor:pointer;">📊 DESCARGAR EXCEL</button>
         <table>
             <thead>
                 <tr><th>Fecha</th><th>Lote</th><th>Inspector</th><th>T. Espera</th><th>T. Revisión</th><th>T. Total</th></tr>
@@ -94,15 +92,11 @@
 
 <script>
     const CLAVE_ADMIN = "1234"; 
-    const USUARIOS_AUTORIZADOS = [
-        { nombre: "MARLON CESPEDES", id: "584" },
-        { nombre: "ADMIN", id: "0000" }
-    ];
-
+    const USUARIOS_AUTORIZADOS = [{ nombre: "MARLON CESPEDES", id: "584" }, { nombre: "ADMIN", id: "0000" }];
     const URL_NUBE = "https://script.google.com/macros/s/AKfycbxFk7zH19OaP4p8r-POxV36Hg698e5k_OOcpV61yIK9uMj3mwN1w4eoD5thkq783mRjxg/exec";
     const URL_TEAMS = "https://default1687bd898f004ac48a85fff50aefa6.c5.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/0f16c956c99b4582b6b39f3b2b2f8373/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=loErLoCZovfhnCLsw7uxY6F-bLQrnoD-StMZU9sxpOs";
 
-    let bloqueoSincronizacion = false;
+    let pausaSincro = false;
 
     function formatTime(ms) {
         if(!ms || ms < 0) return "0m 0s";
@@ -113,65 +107,43 @@
     function iniciarSesion() {
         const u = document.getElementById('userName').value.trim().toUpperCase();
         const i = document.getElementById('userId').value.trim();
-        const validado = USUARIOS_AUTORIZADOS.find(user => user.nombre === u && user.id === i);
-        if(validado) {
-            localStorage.setItem('qc_user', validado.nombre);
-            localStorage.setItem('qc_id', validado.id);
-            location.reload();
-        } else {
-            document.getElementById('error-login').style.display = 'block';
-        }
+        const v = USUARIOS_AUTORIZADOS.find(user => user.nombre === u && user.id === i);
+        if(v) { localStorage.setItem('qc_user', v.nombre); localStorage.setItem('qc_id', v.id); location.reload(); }
+        else { document.getElementById('error-login').style.display = 'block'; }
     }
 
     async function agregarLote() {
         const lote = document.getElementById('loteIn').value.trim();
         if(!lote) return;
-        bloqueoSincronizacion = true;
+        activarPausa();
         const ahora = Date.now();
         const div = document.createElement('div');
         div.className = 'card';
         div.setAttribute('data-creado', ahora);
         div.setAttribute('data-reloj-inicio', ahora);
-        div.innerHTML = `
-            <button class="btn-delete" onclick="eliminarLote(this)">✕</button>
-            <h3>LOTE: ${lote}</h3>
-            <p>Inspector: ${localStorage.getItem('qc_user')}</p>
-            <div class="resumen-tiempos">
-                <div class="linea-tiempo"><span>⏱ Espera:</span> <span class="cronometro">0m 0s</span></div>
-            </div>
-            <button class="btn-action" style="background:#859900;" onclick="tomar(this, '${lote}')">TOMAR LOTE</button>`;
+        div.innerHTML = `<button class="btn-delete" onclick="eliminarLote(this)">✕</button><h3>LOTE: ${lote}</h3><p>Inspector: ${localStorage.getItem('qc_user')}</p><div class="resumen-tiempos"><div class="linea-tiempo"><span>⏱ Espera:</span> <span class="cronometro">0m 0s</span></div></div><button class="btn-action" style="background:#859900;" onclick="tomar(this, '${lote}')">TOMAR LOTE</button>`;
         document.getElementById('id-espera').appendChild(div);
         document.getElementById('loteIn').value = "";
         
-        await fetch(URL_TEAMS, { method: 'POST', body: JSON.stringify({"text": `Lote ${lote}`}), headers: {'Content-Type': 'application/json'} }).catch(()=>{});
+        fetch(URL_TEAMS, { method: 'POST', body: JSON.stringify({"text": `Nuevo Lote: ${lote}`}), headers: {'Content-Type': 'application/json'} }).catch(()=>{});
         guardarNube();
-        setTimeout(() => { bloqueoSincronizacion = false; }, 2000);
     }
 
     function tomar(btn, lote) {
-        bloqueoSincronizacion = true;
+        activarPausa();
         const card = btn.closest('.card');
         const ahora = Date.now();
         const tEspera = ahora - parseInt(card.getAttribute('data-creado'));
         card.setAttribute('data-t-espera', tEspera);
         card.setAttribute('data-reloj-inicio', ahora);
         card.style.borderLeft = "6px solid #cb4b16";
-        card.innerHTML = `
-            <button class="btn-delete" onclick="eliminarLote(this)">✕</button>
-            <h3>LOTE: ${lote}</h3>
-            <p>Revisando: ${localStorage.getItem('qc_user')}</p>
-            <div class="resumen-tiempos">
-                <div class="linea-tiempo"><span>⌛ Espera:</span> <span>${formatTime(tEspera)}</span></div>
-                <div class="linea-tiempo"><span>⏱ Revisión:</span> <span class="cronometro">0m 0s</span></div>
-            </div>
-            <button class="btn-action" style="background:#cb4b16;" onclick="finalizar(this, '${lote}')">FINALIZAR</button>`;
+        card.innerHTML = `<button class="btn-delete" onclick="eliminarLote(this)">✕</button><h3>LOTE: ${lote}</h3><p>Revisando: ${localStorage.getItem('qc_user')}</p><div class="resumen-tiempos"><div class="linea-tiempo"><span>⌛ Espera:</span> <span>${formatTime(tEspera)}</span></div><div class="linea-tiempo"><span>⏱ Revisión:</span> <span class="cronometro">0m 0s</span></div></div><button class="btn-action" style="background:#cb4b16;" onclick="finalizar(this, '${lote}')">FINALIZAR</button>`;
         document.getElementById('id-proceso').appendChild(card);
         guardarNube();
-        setTimeout(() => { bloqueoSincronizacion = false; }, 2000);
     }
 
     function finalizar(btn, lote) {
-        bloqueoSincronizacion = true;
+        activarPausa();
         const card = btn.closest('.card');
         const ahora = Date.now();
         const tEspera = parseInt(card.getAttribute('data-t-espera'));
@@ -179,20 +151,14 @@
         const tTotal = tEspera + tRevision;
         card.removeAttribute('data-reloj-inicio');
         card.style.borderLeft = "6px solid #859900";
-        card.innerHTML = `
-            <button class="btn-delete" onclick="eliminarLote(this)">✕</button>
-            <h3>LOTE: ${lote}</h3>
-            <div class="resumen-tiempos">
-                <div class="linea-tiempo"><span>⌛ Espera:</span> <span>${formatTime(tEspera)}</span></div>
-                <div class="linea-tiempo"><span>🔍 Revisión:</span> <span>${formatTime(tRevision)}</span></div>
-                <div class="linea-tiempo tiempo-final-bold"><span>✅ TOTAL:</span> <span>${formatTime(tTotal)}</span></div>
-            </div>`;
+        card.innerHTML = `<button class="btn-delete" onclick="eliminarLote(this)">✕</button><h3>LOTE: ${lote}</h3><div class="resumen-tiempos"><div class="linea-tiempo"><span>⌛ Espera:</span> <span>${formatTime(tEspera)}</span></div><div class="linea-tiempo"><span>🔍 Revisión:</span> <span>${formatTime(tRevision)}</span></div><div class="linea-tiempo tiempo-final-bold"><span>✅ TOTAL:</span> <span>${formatTime(tTotal)}</span></div></div>`;
         document.getElementById('id-terminado').appendChild(card);
         const fila = `<tr><td>${new Date().toLocaleString()}</td><td>${lote}</td><td>${localStorage.getItem('qc_user')}</td><td>${formatTime(tEspera)}</td><td>${formatTime(tRevision)}</td><td>${formatTime(tTotal)}</td></tr>`;
         document.getElementById('cuerpoHistorial').insertAdjacentHTML('afterbegin', fila);
         guardarNube();
-        setTimeout(() => { bloqueoSincronizacion = false; }, 2000);
     }
+
+    function activarPausa() { pausaSincro = true; setTimeout(() => { pausaSincro = false; }, 4000); }
 
     function guardarNube() {
         const data = { e: document.getElementById('id-espera').innerHTML, p: document.getElementById('id-proceso').innerHTML, t: document.getElementById('id-terminado').innerHTML, h: document.getElementById('cuerpoHistorial').innerHTML };
@@ -200,13 +166,13 @@
     }
 
     async function cargarDatosNube() {
-        if(bloqueoSincronizacion) return;
+        if(pausaSincro) return;
         try {
             const res = await fetch(URL_NUBE);
             const d = await res.json();
-            document.getElementById('id-espera').innerHTML = d.e || "";
-            document.getElementById('id-proceso').innerHTML = d.p || "";
-            document.getElementById('id-terminado').innerHTML = d.t || "";
+            if(document.getElementById('id-espera').innerHTML !== d.e) document.getElementById('id-espera').innerHTML = d.e || "";
+            if(document.getElementById('id-proceso').innerHTML !== d.p) document.getElementById('id-proceso').innerHTML = d.p || "";
+            if(document.getElementById('id-terminado').innerHTML !== d.t) document.getElementById('id-terminado').innerHTML = d.t || "";
             document.getElementById('cuerpoHistorial').innerHTML = d.h || "";
         } catch(e) {}
     }
@@ -216,8 +182,7 @@
             document.getElementById('login-overlay').style.display = 'none';
             document.getElementById('display-user').innerText = localStorage.getItem('qc_user');
             document.getElementById('display-id').innerText = localStorage.getItem('qc_id');
-            cargarDatosNube(); 
-            setInterval(cargarDatosNube, 5000);
+            cargarDatosNube(); setInterval(cargarDatosNube, 5000);
             setInterval(() => {
                 document.querySelectorAll('.card').forEach(c => {
                     const inicio = c.getAttribute('data-reloj-inicio');
@@ -229,7 +194,6 @@
             }, 1000);
         }
     }
-    
     function cerrarSesion() { localStorage.clear(); location.reload(); }
     function limpiarConClave() { if(prompt("Clave:") === CLAVE_ADMIN) { document.getElementById('id-espera').innerHTML=""; document.getElementById('id-proceso').innerHTML=""; document.getElementById('id-terminado').innerHTML=""; guardarNube(); } }
     function eliminarLote(btn) { if(confirm("¿Eliminar?")) { btn.closest('.card').remove(); guardarNube(); } }
