@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>QC Control Colaborativo</title>
+    <title>QC Control Pro - Colaborativo</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #002b36; color: white; margin: 0; padding: 15px; }
         .user-bar { background: #073642; padding: 10px; display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 2px solid #268bd2; align-items: center; }
@@ -12,17 +12,7 @@
         .view { display: none; }
         .view.active { display: block; }
         
-        .top-bar { 
-            display: grid; 
-            grid-template-columns: 1fr 2fr 1fr; 
-            align-items: center; 
-            background: #073642; 
-            padding: 15px; 
-            border-radius: 8px; 
-            margin-bottom: 20px; 
-            gap: 20px; 
-        }
-        
+        .top-bar { display: grid; grid-template-columns: 1fr 2fr 1fr; align-items: center; background: #073642; padding: 15px; border-radius: 8px; margin-bottom: 20px; gap: 20px; }
         .search-box { padding: 10px; border-radius: 4px; border: 1px solid #268bd2; background: #002b36; color: white; width: 100%; max-width: 200px; }
         .registro-central { text-align: center; display: flex; justify-content: center; gap: 10px; }
         .input-lote { padding: 12px; border-radius: 4px; border: none; width: 280px; font-size: 16px; font-weight: bold; }
@@ -80,7 +70,6 @@
         </div>
         <button onclick="limpiarTablero()" class="btn-limpiar">🗑️ LIMPIAR TABLERO</button>
     </div>
-    
     <div class="dashboard">
         <div class="column"><h2>📥 ESPERA</h2><div id="id-espera"></div></div>
         <div class="column"><h2>🔍 REVISIÓN</h2><div id="id-proceso"></div></div>
@@ -104,7 +93,6 @@
 </div>
 
 <script>
-    // URL DE TU GOOGLE SHEETS ACTUALIZADA
     const URL_NUBE = "https://script.google.com/macros/s/AKfycbxFk7zH19OaP4p8r-POxV36Hg698e5k_OOcpV61yIK9uMj3mwN1w4eoD5thkq783mRjxg/exec";
     const URL_TEAMS = "https://default1687bd898f004ac48a85fff50aefa6.c5.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/0f16c956c99b4582b6b39f3b2b2f8373/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=loErLoCZovfhnCLsw7uxY6F-bLQrnoD-StMZU9sxpOs";
 
@@ -128,7 +116,8 @@
             document.getElementById('display-user').innerText = USUARIO;
             document.getElementById('display-id').innerText = ID;
             cargarDatosNube();
-            setInterval(cargarDatosNube, 5000); // REVISA LA NUBE CADA 5 SEGUNDOS
+            setInterval(cargarDatosNube, 5000); // Sincroniza cada 5 seg
+            setInterval(actualizarCronometros, 1000); // Mueve el reloj cada seg
         }
     }
 
@@ -170,9 +159,8 @@
             <p>En espera: ${USUARIO}</p>
             <div class="time-container">⏱ <span class="time-text">0m 0s</span></div>
             <button class="btn-action" style="background:#859900;" onclick="tomar(this, '${lote}')">TOMAR LOTE</button>`;
-        
         document.getElementById('id-espera').appendChild(div);
-        enviarTeams(lote);
+        enviarTeams(lote); // ALERTA A TEAMS
         document.getElementById('loteIn').value = "";
         guardarNube();
     }
@@ -202,10 +190,22 @@
             <p>Terminado por: ${USUARIO}</p>
             <div class="time-container" style="color:green">✅ ${tiempo}</div>`;
         document.getElementById('id-terminado').appendChild(card);
-        
         const fila = `<tr><td>${new Date().toLocaleString()}</td><td>${lote}</td><td>${USUARIO}</td><td>${ID}</td><td>${tiempo}</td></tr>`;
         document.getElementById('cuerpoHistorial').insertAdjacentHTML('afterbegin', fila);
         guardarNube();
+    }
+
+    function actualizarCronometros() {
+        document.querySelectorAll('.card').forEach(card => {
+            const inicio = card.getAttribute('data-inicio');
+            if (inicio) {
+                const segTotal = Math.floor((Date.now() - parseInt(inicio)) / 1000);
+                const min = Math.floor(segTotal / 60);
+                const seg = segTotal % 60;
+                card.querySelector('.time-text').innerText = `${min}m ${seg}s`;
+                if (min >= 40) card.querySelector('.time-container').classList.add('alerta-critica');
+            }
+        });
     }
 
     function guardarNube() {
@@ -216,7 +216,7 @@
             h: document.getElementById('cuerpoHistorial').innerHTML
         };
         const stringData = JSON.stringify(data);
-        ultimaDataCargada = stringData; 
+        ultimaDataCargada = stringData;
         fetch(URL_NUBE, { method: 'POST', mode: 'no-cors', body: stringData });
     }
 
@@ -225,7 +225,6 @@
             const res = await fetch(URL_NUBE);
             const d = await res.json();
             const stringData = JSON.stringify(d);
-            
             if(stringData !== ultimaDataCargada) {
                 document.getElementById('id-espera').innerHTML = d.e || "";
                 document.getElementById('id-proceso').innerHTML = d.p || "";
@@ -233,17 +232,7 @@
                 document.getElementById('cuerpoHistorial').innerHTML = d.h || "";
                 ultimaDataCargada = stringData;
             }
-        } catch(e) { /* Sincronizando... */ }
-    }
-
-    function filtrarFlujo() {
-        const q = document.getElementById('searchFlujo').value.toLowerCase();
-        document.querySelectorAll('.card').forEach(c => c.style.display = c.innerText.toLowerCase().includes(q) ? "block" : "none");
-    }
-
-    function filtrarHistorial() {
-        const q = document.getElementById('searchHistorial').value.toLowerCase();
-        document.querySelectorAll('#cuerpoHistorial tr').forEach(r => r.style.display = r.innerText.toLowerCase().includes(q) ? "" : "none");
+        } catch(e) {}
     }
 
     function exportarCSV() {
@@ -257,38 +246,25 @@
         });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
-        link.download = "Reporte_QC_Compartido.csv";
+        link.download = "Reporte_QC_Final.csv";
         link.click();
     }
 
-    function limpiarTablero() { 
-        if(confirm("⚠️ ¿BORRAR TABLERO COMPARTIDO? Esto afectará a todos los inspectores.")) { 
-            document.getElementById('id-espera').innerHTML = ""; 
-            document.getElementById('id-proceso').innerHTML = ""; 
-            document.getElementById('id-terminado').innerHTML = ""; 
-            guardarNube(); 
-        }
-    }
-    
-    function eliminarLote(btn) { if(confirm("¿Eliminar lote?")) { btn.closest('.card').remove(); guardarNube(); } }
-    
+    function limpiarTablero() { if(confirm("¿Limpiar tablero colaborativo?")) { document.getElementById('id-espera').innerHTML = ""; document.getElementById('id-proceso').innerHTML = ""; document.getElementById('id-terminado').innerHTML = ""; guardarNube(); } }
+    function eliminarLote(btn) { if(confirm("¿Eliminar?")) { btn.closest('.card').remove(); guardarNube(); } }
     function cambiarTab(id, btn) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(id).classList.add('active'); btn.classList.add('active');
     }
-
-    setInterval(() => {
-        document.querySelectorAll('.card').forEach(card => {
-            const inicio = card.getAttribute('data-inicio');
-            if (inicio) {
-                const seg = Math.floor((Date.now() - parseInt(inicio)) / 1000);
-                const min = Math.floor(seg / 60);
-                card.querySelector('.time-text').innerText = min + "m " + (seg % 60) + "s";
-                if (min >= 40) card.querySelector('.time-container').classList.add('alerta-critica');
-            }
-        });
-    }, 1000);
+    function filtrarFlujo() {
+        const q = document.getElementById('searchFlujo').value.toLowerCase();
+        document.querySelectorAll('.card').forEach(c => c.style.display = c.innerText.toLowerCase().includes(q) ? "block" : "none");
+    }
+    function filtrarHistorial() {
+        const q = document.getElementById('searchHistorial').value.toLowerCase();
+        document.querySelectorAll('#cuerpoHistorial tr').forEach(r => r.style.display = r.innerText.toLowerCase().includes(q) ? "" : "none");
+    }
 </script>
 </body>
 </html>
