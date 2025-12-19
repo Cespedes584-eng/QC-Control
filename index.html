@@ -2,9 +2,8 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>QC Control Pro - Seguridad</title>
+    <title>QC Control Pro - Diseño Original</title>
     <style>
-        /* Estilos Base */
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #002b36; color: white; margin: 0; padding: 15px; }
         .user-bar { background: #073642; padding: 10px; display: flex; justify-content: space-between; border-bottom: 2px solid #268bd2; align-items: center; }
         .tabs { display: flex; justify-content: center; gap: 10px; margin: 15px 0; }
@@ -13,29 +12,35 @@
         .view { display: none; }
         .view.active { display: block; }
         
-        /* Login Estilo Original (Mejorado) */
+        /* LOGIN ESTILO ORIGINAL */
         #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #002b36; z-index: 1000; display: flex; justify-content: center; align-items: center; }
         .login-box { background: #073642; padding: 40px; border: 1px solid #268bd2; text-align: center; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-        .login-box h2 { color: #268bd2; margin-bottom: 20px; font-size: 24px; }
+        .login-box h2 { color: #268bd2; margin-bottom: 20px; }
         .login-box input { display: block; margin: 15px auto; padding: 12px; width: 260px; border-radius: 4px; border: none; font-size: 16px; }
-        .btn-login { background: #859900; color: white; padding: 12px 60px; border: none; cursor: pointer; font-weight: bold; border-radius: 4px; font-size: 16px; transition: 0.3s; }
-        .btn-login:hover { background: #b58900; }
+        .btn-login { background: #859900; color: white; padding: 12px 60px; border: none; cursor: pointer; font-weight: bold; border-radius: 4px; font-size: 16px; }
 
-        /* Dashboard y Tarjetas */
         .top-bar { display: grid; grid-template-columns: 1fr 2fr 1fr; align-items: center; background: #073642; padding: 15px; border-radius: 8px; margin-bottom: 20px; gap: 20px; }
         .input-lote { padding: 12px; border-radius: 4px; border: none; width: 280px; font-size: 16px; font-weight: bold; }
+        
         .dashboard { display: flex; gap: 10px; }
         .column { background: #073642; width: 33.33%; min-height: 600px; border-radius: 5px; border: 1px solid #586e75; }
         .column h2 { text-align: center; font-size: 14px; background: #002b36; margin: 0; padding: 12px; color: #93a1a1; }
         
-        .card { background: white; color: #333; margin: 12px; padding: 15px; border-radius: 4px; border-left: 6px solid #268bd2; position: relative; }
-        .card h3 { margin: 0 0 5px 0; font-size: 18px; font-weight: 800; }
-        .resumen-tiempos { background: #f8f9fa; padding: 8px; border-radius: 4px; margin-top: 10px; border: 1px solid #dee2e6; font-size: 13px; }
-        .linea-tiempo { display: flex; justify-content: space-between; border-bottom: 1px dashed #ddd; padding: 2px 0; }
-        .tiempo-final-bold { font-weight: 800; color: #28a745; border-top: 1px solid #333; margin-top: 5px; }
+        /* TARJETA Y DISEÑO DE BOTONES ORIGINALES */
+        .card { background: white; color: #333; margin: 12px; padding: 15px; border-radius: 4px; border-left: 6px solid #268bd2; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .card h3 { margin: 0 0 5px 0; font-size: 18px; color: #000; font-weight: 800; }
+        .card p { margin: 2px 0; font-size: 14px; color: #333; }
+        
+        .btn-action { width: 100%; margin-top: 10px; padding: 12px; border: none; color: white; cursor: pointer; font-weight: 900; border-radius: 4px; font-size: 14px; text-transform: uppercase; }
+        .btn-delete { position: absolute; top: 5px; right: 5px; background: none; border: none; color: #ccc; cursor: pointer; font-size: 18px; }
+        
+        .resumen-tiempos { background: #f8f9fa; padding: 10px; border-radius: 4px; margin-top: 10px; border: 1px solid #dee2e6; }
+        .linea-tiempo { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; border-bottom: 1px dashed #ddd; padding-bottom: 2px; }
+        .tiempo-final-bold { font-weight: 800; color: #28a745; font-size: 15px; border-top: 1px solid #333; padding-top: 5px; margin-top: 5px; }
 
         table { width: 100%; background: white; color: #333; border-collapse: collapse; }
         th, td { border: 1px solid #ccc; padding: 10px; text-align: center; font-size: 12px; }
+        th { background: #eee; }
     </style>
 </head>
 <body onload="verificarSession()">
@@ -79,7 +84,7 @@
 
 <div id="historial" class="view">
     <div style="padding:10px;">
-        <button onclick="exportarCSV()" style="background:#859900; color:white; padding:10px 20px; border:none; border-radius:4px; margin-bottom:10px; cursor:pointer;">📊 EXPORTAR EXCEL</button>
+        <button onclick="exportarCSV()" style="background:#859900; color:white; padding:10px 20px; border:none; border-radius:4px; margin-bottom:10px; cursor:pointer;">📊 DESCARGAR EXCEL</button>
         <table>
             <thead>
                 <tr><th>Fecha</th><th>Lote</th><th>Inspector</th><th>T. Espera</th><th>T. Revisión</th><th>T. Total</th></tr>
@@ -90,56 +95,36 @@
 </div>
 
 <script>
-    // --- CONFIGURACIÓN DE SEGURIDAD ---
-    const CLAVE_ADMIN = "1234"; // Cambia esta clave para poder usar el botón Limpiar
+    const CLAVE_ADMIN = "1234"; 
     
-    // BASE DE DATOS DE USUARIOS AUTORIZADOS
+    // BASE DE DATOS ACTUALIZADA CON ID 584 PARA MARLON
     const USUARIOS_AUTORIZADOS = [
-        { nombre: "Marlon Cespedes", id: "1001" },
-        { nombre: "Admin", id: "0000" },
-        { nombre: "Inspector 1", id: "5555" }
-        // Agrega aquí más nombres e IDs exactos
+        { nombre: "MARLON CESPEDES", id: "584" },
+        { nombre: "ADMIN", id: "0000" },
+        { nombre: "JORGE ALVAREZ", id: "1002" }
     ];
 
     const URL_NUBE = "https://script.google.com/macros/s/AKfycbxFk7zH19OaP4p8r-POxV36Hg698e5k_OOcpV61yIK9uMj3mwN1w4eoD5thkq783mRjxg/exec";
     const URL_TEAMS = "https://default1687bd898f004ac48a85fff50aefa6.c5.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/0f16c956c99b4582b6b39f3b2b2f8373/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=loErLoCZovfhnCLsw7uxY6F-bLQrnoD-StMZU9sxpOs";
 
-    // --- LÓGICA DE INICIO DE SESIÓN ---
-    function iniciarSesion() {
-        const u = document.getElementById('userName').value.trim();
-        const i = document.getElementById('userId').value.trim();
-        
-        // Validar contra la "Base de Datos"
-        const validado = USUARIOS_AUTORIZADOS.find(user => user.nombre === u && user.id === i);
-
-        if(validado) {
-            localStorage.setItem('qc_user', u);
-            localStorage.setItem('qc_id', i);
-            location.reload();
-        } else {
-            document.getElementById('error-login').style.display = 'block';
-        }
-    }
-
-    // --- SEGURIDAD BOTÓN LIMPIAR ---
-    function limpiarConClave() {
-        const pass = prompt("Ingrese la clave de Administrador para borrar todo el tablero:");
-        if(pass === CLAVE_ADMIN) {
-            document.getElementById('id-espera').innerHTML=""; 
-            document.getElementById('id-proceso').innerHTML=""; 
-            document.getElementById('id-terminado').innerHTML=""; 
-            guardarNube();
-            alert("Tablero limpiado con éxito.");
-        } else if(pass !== null) {
-            alert("Clave incorrecta. Acción cancelada.");
-        }
-    }
-
-    // --- EL RESTO DE FUNCIONES (MANTIENEN EL DESGLOSE DE TIEMPOS) ---
     function formatTime(ms) {
         if(!ms || ms < 0) return "0m 0s";
         let s = Math.floor(ms / 1000);
         return `${Math.floor(s / 60)}m ${s % 60}s`;
+    }
+
+    function iniciarSesion() {
+        const u = document.getElementById('userName').value.trim().toUpperCase();
+        const i = document.getElementById('userId').value.trim();
+        const validado = USUARIOS_AUTORIZADOS.find(user => user.nombre === u && user.id === i);
+
+        if(validado) {
+            localStorage.setItem('qc_user', validado.nombre);
+            localStorage.setItem('qc_id', validado.id);
+            location.reload();
+        } else {
+            document.getElementById('error-login').style.display = 'block';
+        }
     }
 
     async function enviarTeams(lote) {
@@ -224,6 +209,15 @@
         guardarNube();
     }
 
+    function limpiarConClave() {
+        if(prompt("Clave de Administrador:") === CLAVE_ADMIN) {
+            document.getElementById('id-espera').innerHTML=""; 
+            document.getElementById('id-proceso').innerHTML=""; 
+            document.getElementById('id-terminado').innerHTML=""; 
+            guardarNube();
+        }
+    }
+
     function verificarSession() {
         if(localStorage.getItem('qc_user')) {
             document.getElementById('login-overlay').style.display = 'none';
@@ -262,6 +256,10 @@
         document.getElementById(id).classList.add('active'); btn.classList.add('active');
     }
     function eliminarLote(btn) { if(confirm("¿Eliminar?")) { btn.closest('.card').remove(); guardarNube(); } }
+    function filtrarFlujo() {
+        const q = document.getElementById('searchFlujo').value.toLowerCase();
+        document.querySelectorAll('.card').forEach(c => c.style.display = c.innerText.toLowerCase().includes(q) ? "block" : "none");
+    }
     function exportarCSV() {
         let csv = "\uFEFF";
         document.querySelectorAll("table tr").forEach(f => {
@@ -269,12 +267,8 @@
         });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
-        link.download = "Reporte_QC_Seguro.csv";
+        link.download = "Reporte_QC.csv";
         link.click();
-    }
-    function filtrarFlujo() {
-        const q = document.getElementById('searchFlujo').value.toLowerCase();
-        document.querySelectorAll('.card').forEach(c => c.style.display = c.innerText.toLowerCase().includes(q) ? "block" : "none");
     }
 </script>
 </body>
