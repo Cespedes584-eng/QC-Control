@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>QC Control Pro - Tiempos Detallados</title>
+    <title>QC Control - Detalle de Tiempos</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #002b36; color: white; margin: 0; padding: 15px; }
         .user-bar { background: #073642; padding: 10px; display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 2px solid #268bd2; align-items: center; }
@@ -13,31 +13,34 @@
         .view.active { display: block; }
         
         .top-bar { display: grid; grid-template-columns: 1fr 2fr 1fr; align-items: center; background: #073642; padding: 15px; border-radius: 8px; margin-bottom: 20px; gap: 20px; }
-        .search-box { padding: 10px; border-radius: 4px; border: 1px solid #268bd2; background: #002b36; color: white; width: 100%; max-width: 200px; }
         .registro-central { text-align: center; display: flex; justify-content: center; gap: 10px; }
         .input-lote { padding: 12px; border-radius: 4px; border: none; width: 280px; font-size: 16px; font-weight: bold; }
-        .btn-limpiar { background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; justify-self: end; }
-
+        
         .dashboard { display: flex; gap: 10px; }
         .column { background: #073642; width: 33.33%; min-height: 600px; border-radius: 5px; border: 1px solid #586e75; }
         .column h2 { text-align: center; font-size: 14px; background: #002b36; margin: 0; padding: 12px; border-radius: 5px 5px 0 0; color: #93a1a1; }
         
         .card { background: white; color: #333; margin: 12px; padding: 15px; border-radius: 4px; border-left: 6px solid #268bd2; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        .card h3 { margin: 0; font-size: 18px; color: #000; font-weight: 800; }
+        .card h3 { margin: 0 0 5px 0; font-size: 18px; color: #000; font-weight: 800; }
+        .card p { margin: 2px 0; font-size: 13px; color: #555; }
+        
         .btn-action { width: 100%; margin-top: 10px; padding: 10px; border: none; color: white; cursor: pointer; font-weight: bold; border-radius: 4px; }
         .btn-delete { position: absolute; top: 5px; right: 5px; background: none; border: none; color: #ccc; cursor: pointer; font-size: 16px; }
         
-        .time-container { background: #eee; padding: 5px 10px; border-radius: 4px; margin: 8px 0; display: inline-block; font-weight: bold; font-size: 13px; }
-        @keyframes parpadeo { 0% { background: #eee; } 50% { background: #ff4444; color: white; } 100% { background: #eee; } }
+        .time-box { background: #f0f0f0; padding: 8px; border-radius: 4px; margin-top: 8px; font-size: 12px; border: 1px solid #ddd; }
+        .time-row { display: flex; justify-content: space-between; margin-bottom: 2px; }
+        .time-total { border-top: 1px solid #ccc; margin-top: 5px; padding-top: 5px; font-weight: bold; color: #2e7d32; }
+
+        @keyframes parpadeo { 0% { background: #f0f0f0; } 50% { background: #ff4444; color: white; } 100% { background: #f0f0f0; } }
         .alerta-critica { animation: parpadeo 1s infinite; }
 
-        table { width: 100%; background: white; color: #333; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
-        th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
-        th { background: #eee; color: #000; font-weight: bold; }
+        table { width: 100%; background: white; color: #333; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: center; font-size: 13px; }
+        th { background: #eee; }
 
         #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #002b36; z-index: 1000; display: flex; justify-content: center; align-items: center; }
         .login-box { background: #073642; padding: 40px; border: 1px solid #268bd2; text-align: center; border-radius: 8px; }
-        .login-box input { display: block; margin: 10px auto; padding: 12px; width: 250px; border-radius: 4px; border: none; }
+        .login-box input { display: block; margin: 10px auto; padding: 12px; width: 250px; border-radius: 4px; }
     </style>
 </head>
 <body onload="verificarSession()">
@@ -53,7 +56,7 @@
 
 <div class="user-bar">
     <span>👤 Inspector: <strong id="display-user"></strong> | ID: <strong id="display-id"></strong></span>
-    <button onclick="cerrarSesion()" style="background:#dc3545; color:white; border:none; padding:6px 15px; cursor:pointer; border-radius:4px; font-weight:bold;">CERRAR SESIÓN</button>
+    <button onclick="cerrarSesion()" style="background:#dc3545; color:white; border:none; padding:6px 15px; cursor:pointer; border-radius:4px;">CERRAR SESIÓN</button>
 </div>
 
 <div class="tabs">
@@ -63,13 +66,14 @@
 
 <div id="flujo" class="view active">
     <div class="top-bar">
-        <input type="text" id="searchFlujo" class="search-box" placeholder="🔍 Buscar lote..." oninput="filtrarFlujo()">
+        <input type="text" id="searchFlujo" style="padding:10px; border-radius:4px;" placeholder="🔍 Buscar lote..." oninput="filtrarFlujo()">
         <div class="registro-central">
-            <input type="text" id="loteIn" class="input-lote" placeholder="ESCRIBE EL LOTE AQUÍ..." onkeypress="if(event.key==='Enter') agregarLote()">
+            <input type="text" id="loteIn" class="input-lote" placeholder="LOTE..." onkeypress="if(event.key==='Enter') agregarLote()">
             <button onclick="agregarLote()" style="padding:11px 25px; background:#268bd2; color:white; border:none; cursor:pointer; font-weight:bold; border-radius:4px;">REGISTRAR</button>
         </div>
-        <button onclick="limpiarTablero()" class="btn-limpiar">🗑️ LIMPIAR TABLERO</button>
+        <button onclick="limpiarTablero()" style="background:#dc3545; color:white; border:none; padding:10px; border-radius:4px; cursor:pointer;">🗑️ LIMPIAR</button>
     </div>
+    
     <div class="dashboard">
         <div class="column"><h2>📥 ESPERA</h2><div id="id-espera"></div></div>
         <div class="column"><h2>🔍 REVISIÓN</h2><div id="id-proceso"></div></div>
@@ -79,20 +83,10 @@
 
 <div id="historial" class="view">
     <div style="padding:10px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; background:#073642; padding:15px; border-radius:8px; margin-bottom:15px;">
-            <input type="text" id="searchHistorial" class="search-box" placeholder="🔍 Filtrar historial..." oninput="filtrarHistorial()">
-            <button onclick="exportarCSV()" style="background:#859900; color:white; padding:12px 25px; border:none; cursor:pointer; font-weight:bold; border-radius:4px;">📊 EXCEL</button>
-        </div>
+        <button onclick="exportarCSV()" style="background:#859900; color:white; padding:10px 20px; border:none; cursor:pointer; border-radius:4px; margin-bottom:10px;">📊 DESCARGAR EXCEL</button>
         <table id="tablaHistorial">
             <thead>
-                <tr>
-                    <th>Fecha</th>
-                    <th>Lote</th>
-                    <th>Inspector</th>
-                    <th>T. Espera</th>
-                    <th>T. Revisión</th>
-                    <th>T. Total</th>
-                </tr>
+                <tr><th>Fecha</th><th>Lote</th><th>Inspector</th><th>Espera</th><th>Revisión</th><th>Total</th></tr>
             </thead>
             <tbody id="cuerpoHistorial"></tbody>
         </table>
@@ -110,8 +104,7 @@
         const u = document.getElementById('userName').value;
         const i = document.getElementById('userId').value;
         if(!u || !i) return alert("Faltan datos");
-        localStorage.setItem('qc_user', u); 
-        localStorage.setItem('qc_id', i);
+        localStorage.setItem('qc_user', u); localStorage.setItem('qc_id', i);
         location.reload();
     }
 
@@ -124,23 +117,14 @@
             document.getElementById('display-id').innerText = ID;
             cargarDatosNube();
             setInterval(cargarDatosNube, 5000);
-            setInterval(actualizarCronometros, 1000);
-        }
-    }
-
-    function cerrarSesion() { 
-        if(confirm("¿Seguro quieres cerrar sesión?")) {
-            localStorage.removeItem('qc_user');
-            localStorage.removeItem('qc_id');
-            location.reload(); 
+            setInterval(actualizarRelojes, 1000);
         }
     }
 
     function formatTime(ms) {
-        const segTotal = Math.floor(ms / 1000);
-        const min = Math.floor(segTotal / 60);
-        const seg = segTotal % 60;
-        return `${min}m ${seg}s`;
+        if(!ms || ms < 0) return "0m 0s";
+        const totalSeg = Math.floor(ms / 1000);
+        return `${Math.floor(totalSeg / 60)}m ${totalSeg % 60}s`;
     }
 
     function agregarLote() {
@@ -150,15 +134,17 @@
         const div = document.createElement('div');
         div.className = 'card';
         div.setAttribute('data-creado', ahora);
-        div.setAttribute('data-inicio-etapa', ahora);
+        div.setAttribute('data-etapa-inicio', ahora);
         div.innerHTML = `
             <button class="btn-delete" onclick="eliminarLote(this)">✕</button>
             <h3>LOTE: ${lote}</h3>
-            <p>En espera: ${USUARIO}</p>
-            <div class="time-container">⏱ <span class="time-text">0m 0s</span></div>
+            <p>Inspector: ${USUARIO}</p>
+            <div class="time-box">
+                <div class="time-row"><span>⏱ En espera:</span> <span class="reloj">0m 0s</span></div>
+            </div>
             <button class="btn-action" style="background:#859900;" onclick="tomar(this, '${lote}')">TOMAR LOTE</button>`;
         document.getElementById('id-espera').appendChild(div);
-        fetch(URL_TEAMS, { method: 'POST', body: JSON.stringify({"text": `Lote ${lote} en espera`}), headers: {'Content-Type': 'application/json'} }).catch(() => {});
+        fetch(URL_TEAMS, { method: 'POST', body: JSON.stringify({"text": `Lote ${lote} registrado por ${USUARIO}`}), headers: {'Content-Type': 'application/json'} }).catch(()=>{});
         document.getElementById('loteIn').value = "";
         guardarNube();
     }
@@ -166,17 +152,19 @@
     function tomar(btn, lote) {
         const card = btn.closest('.card');
         const ahora = Date.now();
-        const creado = parseInt(card.getAttribute('data-creado'));
-        const tiempoEspera = ahora - creado;
+        const tEspera = ahora - parseInt(card.getAttribute('data-creado'));
         
-        card.setAttribute('data-t-espera', tiempoEspera);
-        card.setAttribute('data-inicio-etapa', ahora);
+        card.setAttribute('data-t-espera', tEspera);
+        card.setAttribute('data-etapa-inicio', ahora);
         card.style.borderLeft = "6px solid #cb4b16";
         card.innerHTML = `
             <button class="btn-delete" onclick="eliminarLote(this)">✕</button>
             <h3>LOTE: ${lote}</h3>
             <p>Revisando: ${USUARIO}</p>
-            <div class="time-container">⏱ <span class="time-text">0m 0s</span></div>
+            <div class="time-box">
+                <div class="time-row"><span>⌛ Espera:</span> <span>${formatTime(tEspera)}</span></div>
+                <div class="time-row"><span>⏱ Revisión:</span> <span class="reloj">0m 0s</span></div>
+            </div>
             <button class="btn-action" style="background:#cb4b16;" onclick="finalizar(this, '${lote}')">FINALIZAR</button>`;
         document.getElementById('id-proceso').appendChild(card);
         guardarNube();
@@ -185,39 +173,38 @@
     function finalizar(btn, lote) {
         const card = btn.closest('.card');
         const ahora = Date.now();
-        const inicioRevision = parseInt(card.getAttribute('data-inicio-etapa'));
-        const tEsperaMs = parseInt(card.getAttribute('data-t-espera'));
-        const tRevisionMs = ahora - inicioRevision;
-        const tTotalMs = tEsperaMs + tRevisionMs;
+        const tEspera = parseInt(card.getAttribute('data-t-espera'));
+        const tRevision = ahora - parseInt(card.getAttribute('data-etapa-inicio'));
+        const tTotal = tEspera + tRevision;
 
-        card.removeAttribute('data-inicio-etapa');
+        card.removeAttribute('data-etapa-inicio');
         card.style.borderLeft = "6px solid #859900";
         card.innerHTML = `
             <button class="btn-delete" onclick="eliminarLote(this)">✕</button>
             <h3>LOTE: ${lote}</h3>
             <p>Terminado por: ${USUARIO}</p>
-            <div class="time-container" style="color:green">✅ Total: ${formatTime(tTotalMs)}</div>`;
+            <div class="time-box">
+                <div class="time-row"><span>⌛ Espera:</span> <span>${formatTime(tEspera)}</span></div>
+                <div class="time-row"><span>🔍 Revisión:</span> <span>${formatTime(tRevision)}</span></div>
+                <div class="time-row time-total"><span>✅ TOTAL:</span> <span>${formatTime(tTotal)}</span></div>
+            </div>`;
         document.getElementById('id-terminado').appendChild(card);
 
-        const fila = `<tr>
-            <td>${new Date().toLocaleString()}</td>
-            <td>${lote}</td>
-            <td>${USUARIO}</td>
-            <td>${formatTime(tEsperaMs)}</td>
-            <td>${formatTime(tRevisionMs)}</td>
-            <td style="font-weight:bold">${formatTime(tTotalMs)}</td>
-        </tr>`;
+        const fila = `<tr><td>${new Date().toLocaleString()}</td><td>${lote}</td><td>${USUARIO}</td><td>${formatTime(tEspera)}</td><td>${formatTime(tRevision)}</td><td>${formatTime(tTotal)}</td></tr>`;
         document.getElementById('cuerpoHistorial').insertAdjacentHTML('afterbegin', fila);
         guardarNube();
     }
 
-    function actualizarCronometros() {
+    function actualizarRelojes() {
         document.querySelectorAll('.card').forEach(card => {
-            const inicioEtapa = card.getAttribute('data-inicio-etapa');
-            if (inicioEtapa) {
-                const transcurrido = Date.now() - parseInt(inicioEtapa);
-                card.querySelector('.time-text').innerText = formatTime(transcurrido);
-                if (Math.floor(transcurrido/60000) >= 40) card.querySelector('.time-container').classList.add('alerta-critica');
+            const inicio = card.getAttribute('data-etapa-inicio');
+            if(inicio) {
+                const transcurrido = Date.now() - parseInt(inicio);
+                const reloj = card.querySelector('.reloj');
+                if(reloj) {
+                    reloj.innerText = formatTime(transcurrido);
+                    if(transcurrido >= 2400000) card.querySelector('.time-box').classList.add('alerta-critica');
+                }
             }
         });
     }
@@ -246,26 +233,28 @@
         } catch(e) {}
     }
 
-    function exportarCSV() {
-        let csv = "\uFEFF";
-        const filas = document.querySelectorAll("#tablaHistorial tr");
-        filas.forEach(f => {
-            csv += Array.from(f.querySelectorAll("th, td")).map(c => `"${c.innerText}"`).join(",") + "\r\n";
-        });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
-        link.download = "Reporte_QC_Detallado.csv";
-        link.click();
-    }
-
+    function cerrarSesion() { if(confirm("¿Cerrar sesión?")) { localStorage.clear(); location.reload(); } }
+    function limpiarTablero() { if(confirm("¿Limpiar todo el flujo?")) { document.getElementById('id-espera').innerHTML=""; document.getElementById('id-proceso').innerHTML=""; document.getElementById('id-terminado').innerHTML=""; guardarNube(); } }
+    function eliminarLote(btn) { if(confirm("¿Eliminar lote?")) { btn.closest('.card').remove(); guardarNube(); } }
     function cambiarTab(id, btn) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(id).classList.add('active'); btn.classList.add('active');
     }
-    
-    function limpiarTablero() { if(confirm("¿Limpiar tablero?")) { document.getElementById('id-espera').innerHTML = ""; document.getElementById('id-proceso').innerHTML = ""; document.getElementById('id-terminado').innerHTML = ""; guardarNube(); } }
-    function eliminarLote(btn) { if(confirm("¿Eliminar?")) { btn.closest('.card').remove(); guardarNube(); } }
+    function filtrarFlujo() {
+        const q = document.getElementById('searchFlujo').value.toLowerCase();
+        document.querySelectorAll('.card').forEach(c => c.style.display = c.innerText.toLowerCase().includes(q) ? "block" : "none");
+    }
+    function exportarCSV() {
+        let csv = "\uFEFF";
+        document.querySelectorAll("#tablaHistorial tr").forEach(f => {
+            csv += Array.from(f.querySelectorAll("th, td")).map(c => `"${c.innerText}"`).join(",") + "\r\n";
+        });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+        link.download = "Reporte_QC.csv";
+        link.click();
+    }
 </script>
 </body>
 </html>
