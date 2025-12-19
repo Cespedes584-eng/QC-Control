@@ -45,7 +45,7 @@
     <div class="login-box">
         <h2 style="color:#268bd2">QC CONTROL</h2>
         <input type="text" id="userName" placeholder="Nombre Completo">
-        <input type="password" id="userId" placeholder="ID (Marlon: 584)">
+        <input type="password" id="userId" placeholder="ID (ID)">
         <button class="btn-login" onclick="iniciarSesion()">ACCEDER</button>
         <p id="error-login" style="color:#dc3545; font-size:12px; margin-top:10px; display:none;">⚠️ Datos incorrectos.</p>
     </div>
@@ -92,7 +92,7 @@
 
 <script>
     const CLAVE_ADMIN = "1234"; 
-    const USUARIOS_AUTORIZADOS = [{ nombre: "MARLON CESPEDES", id: "584" }, { nombre: "ADMIN", id: "0000" }];
+    const USUARIOS_AUTORIZADOS = [{ nombre: "MARLON CESPEDES", id: "584" }, { nombre: "ADMIN", id: "0000" }, { nombre: "JORDAN MURILLO", id: "594" }];
     const URL_NUBE = "https://script.google.com/macros/s/AKfycbxFk7zH19OaP4p8r-POxV36Hg698e5k_OOcpV61yIK9uMj3mwN1w4eoD5thkq783mRjxg/exec";
     const URL_TEAMS = "https://default1687bd898f004ac48a85fff50aefa6.c5.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/0f16c956c99b4582b6b39f3b2b2f8373/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=loErLoCZovfhnCLsw7uxY6F-bLQrnoD-StMZU9sxpOs";
 
@@ -214,4 +214,5 @@
     }
 </script>
 </body>
+
 </html>
