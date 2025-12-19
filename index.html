@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>QC Control Pro - Colaborativo</title>
+    <title>QC Control Pro - Tiempos Detallados</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #002b36; color: white; margin: 0; padding: 15px; }
         .user-bar { background: #073642; padding: 10px; display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 2px solid #268bd2; align-items: center; }
@@ -27,12 +27,12 @@
         .btn-action { width: 100%; margin-top: 10px; padding: 10px; border: none; color: white; cursor: pointer; font-weight: bold; border-radius: 4px; }
         .btn-delete { position: absolute; top: 5px; right: 5px; background: none; border: none; color: #ccc; cursor: pointer; font-size: 16px; }
         
-        .time-container { background: #eee; padding: 5px 10px; border-radius: 4px; margin: 8px 0; display: inline-block; font-weight: bold; }
+        .time-container { background: #eee; padding: 5px 10px; border-radius: 4px; margin: 8px 0; display: inline-block; font-weight: bold; font-size: 13px; }
         @keyframes parpadeo { 0% { background: #eee; } 50% { background: #ff4444; color: white; } 100% { background: #eee; } }
         .alerta-critica { animation: parpadeo 1s infinite; }
 
-        table { width: 100%; background: white; color: #333; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ccc; padding: 12px; text-align: center; }
+        table { width: 100%; background: white; color: #333; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
         th { background: #eee; color: #000; font-weight: bold; }
 
         #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #002b36; z-index: 1000; display: flex; justify-content: center; align-items: center; }
@@ -85,7 +85,14 @@
         </div>
         <table id="tablaHistorial">
             <thead>
-                <tr><th>Fecha / Hora</th><th>Lote</th><th>Inspector</th><th>ID</th><th>Tiempo Total</th></tr>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Lote</th>
+                    <th>Inspector</th>
+                    <th>T. Espera</th>
+                    <th>T. Revisión</th>
+                    <th>T. Total</th>
+                </tr>
             </thead>
             <tbody id="cuerpoHistorial"></tbody>
         </table>
@@ -116,8 +123,8 @@
             document.getElementById('display-user').innerText = USUARIO;
             document.getElementById('display-id').innerText = ID;
             cargarDatosNube();
-            setInterval(cargarDatosNube, 5000); // Sincroniza cada 5 seg
-            setInterval(actualizarCronometros, 1000); // Mueve el reloj cada seg
+            setInterval(cargarDatosNube, 5000);
+            setInterval(actualizarCronometros, 1000);
         }
     }
 
@@ -129,30 +136,21 @@
         }
     }
 
-    async function enviarTeams(lote) {
-        const body = {
-            "type": "message",
-            "attachments": [{
-                "contentType": "application/vnd.microsoft.card.adaptive",
-                "content": {
-                    "type": "AdaptiveCard",
-                    "body": [
-                        {"type": "TextBlock", "text": "📢 LOTE REGISTRADO EN ESPERA", "weight": "Bolder", "size": "Large", "color": "Accent"},
-                        {"type": "FactSet", "facts": [{"title": "Lote:", "value": lote}, {"title": "Por:", "value": USUARIO}]}
-                    ],
-                    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json", "version": "1.4"
-                }
-            }]
-        };
-        fetch(URL_TEAMS, { method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } }).catch(e => console.log(e));
+    function formatTime(ms) {
+        const segTotal = Math.floor(ms / 1000);
+        const min = Math.floor(segTotal / 60);
+        const seg = segTotal % 60;
+        return `${min}m ${seg}s`;
     }
 
     function agregarLote() {
         const lote = document.getElementById('loteIn').value.trim();
         if(!lote) return;
+        const ahora = Date.now();
         const div = document.createElement('div');
         div.className = 'card';
-        div.setAttribute('data-inicio', Date.now());
+        div.setAttribute('data-creado', ahora);
+        div.setAttribute('data-inicio-etapa', ahora);
         div.innerHTML = `
             <button class="btn-delete" onclick="eliminarLote(this)">✕</button>
             <h3>LOTE: ${lote}</h3>
@@ -160,14 +158,19 @@
             <div class="time-container">⏱ <span class="time-text">0m 0s</span></div>
             <button class="btn-action" style="background:#859900;" onclick="tomar(this, '${lote}')">TOMAR LOTE</button>`;
         document.getElementById('id-espera').appendChild(div);
-        enviarTeams(lote); // ALERTA A TEAMS
+        fetch(URL_TEAMS, { method: 'POST', body: JSON.stringify({"text": `Lote ${lote} en espera`}), headers: {'Content-Type': 'application/json'} }).catch(() => {});
         document.getElementById('loteIn').value = "";
         guardarNube();
     }
 
     function tomar(btn, lote) {
         const card = btn.closest('.card');
-        card.setAttribute('data-inicio', Date.now());
+        const ahora = Date.now();
+        const creado = parseInt(card.getAttribute('data-creado'));
+        const tiempoEspera = ahora - creado;
+        
+        card.setAttribute('data-t-espera', tiempoEspera);
+        card.setAttribute('data-inicio-etapa', ahora);
         card.style.borderLeft = "6px solid #cb4b16";
         card.innerHTML = `
             <button class="btn-delete" onclick="eliminarLote(this)">✕</button>
@@ -181,29 +184,40 @@
 
     function finalizar(btn, lote) {
         const card = btn.closest('.card');
-        const tiempo = card.querySelector('.time-text').innerText;
-        card.removeAttribute('data-inicio');
+        const ahora = Date.now();
+        const inicioRevision = parseInt(card.getAttribute('data-inicio-etapa'));
+        const tEsperaMs = parseInt(card.getAttribute('data-t-espera'));
+        const tRevisionMs = ahora - inicioRevision;
+        const tTotalMs = tEsperaMs + tRevisionMs;
+
+        card.removeAttribute('data-inicio-etapa');
         card.style.borderLeft = "6px solid #859900";
         card.innerHTML = `
             <button class="btn-delete" onclick="eliminarLote(this)">✕</button>
             <h3>LOTE: ${lote}</h3>
             <p>Terminado por: ${USUARIO}</p>
-            <div class="time-container" style="color:green">✅ ${tiempo}</div>`;
+            <div class="time-container" style="color:green">✅ Total: ${formatTime(tTotalMs)}</div>`;
         document.getElementById('id-terminado').appendChild(card);
-        const fila = `<tr><td>${new Date().toLocaleString()}</td><td>${lote}</td><td>${USUARIO}</td><td>${ID}</td><td>${tiempo}</td></tr>`;
+
+        const fila = `<tr>
+            <td>${new Date().toLocaleString()}</td>
+            <td>${lote}</td>
+            <td>${USUARIO}</td>
+            <td>${formatTime(tEsperaMs)}</td>
+            <td>${formatTime(tRevisionMs)}</td>
+            <td style="font-weight:bold">${formatTime(tTotalMs)}</td>
+        </tr>`;
         document.getElementById('cuerpoHistorial').insertAdjacentHTML('afterbegin', fila);
         guardarNube();
     }
 
     function actualizarCronometros() {
         document.querySelectorAll('.card').forEach(card => {
-            const inicio = card.getAttribute('data-inicio');
-            if (inicio) {
-                const segTotal = Math.floor((Date.now() - parseInt(inicio)) / 1000);
-                const min = Math.floor(segTotal / 60);
-                const seg = segTotal % 60;
-                card.querySelector('.time-text').innerText = `${min}m ${seg}s`;
-                if (min >= 40) card.querySelector('.time-container').classList.add('alerta-critica');
+            const inicioEtapa = card.getAttribute('data-inicio-etapa');
+            if (inicioEtapa) {
+                const transcurrido = Date.now() - parseInt(inicioEtapa);
+                card.querySelector('.time-text').innerText = formatTime(transcurrido);
+                if (Math.floor(transcurrido/60000) >= 40) card.querySelector('.time-container').classList.add('alerta-critica');
             }
         });
     }
@@ -215,56 +229,43 @@
             t: document.getElementById('id-terminado').innerHTML,
             h: document.getElementById('cuerpoHistorial').innerHTML
         };
-        const stringData = JSON.stringify(data);
-        ultimaDataCargada = stringData;
-        fetch(URL_NUBE, { method: 'POST', mode: 'no-cors', body: stringData });
+        fetch(URL_NUBE, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
     }
 
     async function cargarDatosNube() {
         try {
             const res = await fetch(URL_NUBE);
             const d = await res.json();
-            const stringData = JSON.stringify(d);
-            if(stringData !== ultimaDataCargada) {
+            if(JSON.stringify(d) !== ultimaDataCargada) {
                 document.getElementById('id-espera').innerHTML = d.e || "";
                 document.getElementById('id-proceso').innerHTML = d.p || "";
                 document.getElementById('id-terminado').innerHTML = d.t || "";
                 document.getElementById('cuerpoHistorial').innerHTML = d.h || "";
-                ultimaDataCargada = stringData;
+                ultimaDataCargada = JSON.stringify(d);
             }
         } catch(e) {}
     }
 
     function exportarCSV() {
         let csv = "\uFEFF";
-        const filas = document.getElementById("tablaHistorial").querySelectorAll("tr");
-        filas.forEach(fila => {
-            if(fila.style.display !== "none") {
-                const celdas = fila.querySelectorAll("th, td");
-                csv += Array.from(celdas).map(c => `"${c.innerText}"`).join(",") + "\r\n";
-            }
+        const filas = document.querySelectorAll("#tablaHistorial tr");
+        filas.forEach(f => {
+            csv += Array.from(f.querySelectorAll("th, td")).map(c => `"${c.innerText}"`).join(",") + "\r\n";
         });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
-        link.download = "Reporte_QC_Final.csv";
+        link.download = "Reporte_QC_Detallado.csv";
         link.click();
     }
 
-    function limpiarTablero() { if(confirm("¿Limpiar tablero colaborativo?")) { document.getElementById('id-espera').innerHTML = ""; document.getElementById('id-proceso').innerHTML = ""; document.getElementById('id-terminado').innerHTML = ""; guardarNube(); } }
-    function eliminarLote(btn) { if(confirm("¿Eliminar?")) { btn.closest('.card').remove(); guardarNube(); } }
     function cambiarTab(id, btn) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(id).classList.add('active'); btn.classList.add('active');
     }
-    function filtrarFlujo() {
-        const q = document.getElementById('searchFlujo').value.toLowerCase();
-        document.querySelectorAll('.card').forEach(c => c.style.display = c.innerText.toLowerCase().includes(q) ? "block" : "none");
-    }
-    function filtrarHistorial() {
-        const q = document.getElementById('searchHistorial').value.toLowerCase();
-        document.querySelectorAll('#cuerpoHistorial tr').forEach(r => r.style.display = r.innerText.toLowerCase().includes(q) ? "" : "none");
-    }
+    
+    function limpiarTablero() { if(confirm("¿Limpiar tablero?")) { document.getElementById('id-espera').innerHTML = ""; document.getElementById('id-proceso').innerHTML = ""; document.getElementById('id-terminado').innerHTML = ""; guardarNube(); } }
+    function eliminarLote(btn) { if(confirm("¿Eliminar?")) { btn.closest('.card').remove(); guardarNube(); } }
 </script>
 </body>
 </html>
