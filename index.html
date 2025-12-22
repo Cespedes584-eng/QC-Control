@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>QC Control PRO - Final</title>
+    <title>QC Control PRO - Prueba Limpieza</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #002b36; color: white; margin: 0; padding: 15px; }
         .user-bar { background: #073642; padding: 10px; display: flex; justify-content: space-between; border-bottom: 2px solid #268bd2; align-items: center; }
@@ -12,7 +12,6 @@
         .view { display: none; }
         .view.active { display: block; }
         
-        /* LOGIN MEJORADO */
         #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #002b36; z-index: 1000; display: flex; justify-content: center; align-items: center; }
         .login-box { background: #073642; padding: 40px; border: 1px solid #268bd2; text-align: center; border-radius: 8px; width: 320px; }
         .login-box input { display: block; margin: 15px auto; padding: 12px; width: 90%; border-radius: 4px; border: none; font-size: 16px; }
@@ -84,7 +83,7 @@
 
 <script>
     const CLAVE_ADMIN = "1234"; 
-    const USUARIOS_AUTORIZADOS = [{ nombre: "MARLON CESPEDES", id: "584" }, { nombre: "ADMIN", id: "0000" }, { nombre: "JORDAN MURILLO", id: "594" }];
+    const USUARIOS_AUTORIZADOS = [{ nombre: "MARLON CESPEDES", id: "584" }, { nombre: "ADMIN", id: "0000" }];
     const URL_NUBE = "https://script.google.com/macros/s/AKfycbyyygiMYrywmB_FdxDyyaqn9Lgfrd2vjLCSg9XG7dyS6I6ssO_EEZgywoPrkWF5-oBlUg/exec";
     const URL_TEAMS = "https://default1687bd898f004ac48a85fff50aefa6.c5.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/0f16c956c99b4582b6b39f3b2b2f8373/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=loErLoCZovfhnCLsw7uxY6F-bLQrnoD-StMZU9sxpOs";
 
@@ -105,9 +104,7 @@
         const u = document.getElementById('userName').value.trim().toUpperCase();
         const i = document.getElementById('userId').value.trim();
         const errorMsg = document.getElementById('error-login');
-        
         const v = USUARIOS_AUTORIZADOS.find(user => user.nombre === u && user.id === i);
-        
         if(v) { 
             errorMsg.style.display = 'none';
             localStorage.setItem('qc_user', v.nombre); 
@@ -182,9 +179,11 @@
         } catch(e) {}
     }
 
+    // MODIFICADO PARA LA PRUEBA A LAS 5:50 PM (17:50)
     function limpieza4AM() {
         const ahora = new Date();
-        if(ahora.getHours() === 4 && ahora.getMinutes() === 0) {
+        if(ahora.getHours() === 17 && ahora.getMinutes() === 50) {
+            console.log("EJECUTANDO PRUEBA DE LIMPIEZA...");
             document.getElementById('id-terminado').innerHTML = "";
             guardarNube();
         }
@@ -210,7 +209,14 @@
     }
     function cerrarSesion() { localStorage.clear(); location.reload(); }
     function limpiarConClave() { if(prompt("Clave:") === CLAVE_ADMIN) { document.getElementById('id-espera').innerHTML=""; document.getElementById('id-proceso').innerHTML=""; document.getElementById('id-terminado').innerHTML=""; guardarNube(); } }
-    function eliminarLote(btn) { if(confirm("¿Eliminar?")) { btn.closest('.card').remove(); guardarNube(); } }
+    
+    function eliminarLote(btn) { 
+        if(prompt("Seguridad: Ingrese la clave para eliminar este lote:") === CLAVE_ADMIN) { 
+            btn.closest('.card').remove(); 
+            guardarNube(); 
+        } 
+    }
+
     function cambiarTab(id, btn) { document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById(id).classList.add('active'); document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); }
     function filtrarFlujo() {
         const q = document.getElementById('searchFlujo').value.toLowerCase();
@@ -228,8 +234,4 @@
     }
 </script>
 </body>
-
 </html>
-
-
-
