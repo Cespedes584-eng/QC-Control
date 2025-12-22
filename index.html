@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>QC Control PRO - Prueba Limpieza</title>
+    <title>QC Control PRO - Prueba 5:55 PM</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #002b36; color: white; margin: 0; padding: 15px; }
         .user-bar { background: #073642; padding: 10px; display: flex; justify-content: space-between; border-bottom: 2px solid #268bd2; align-items: center; }
@@ -179,11 +179,11 @@
         } catch(e) {}
     }
 
-    // MODIFICADO PARA LA PRUEBA A LAS 5:50 PM (17:50)
+    // SEGUNDA PRUEBA: 5:55 PM (17:55)
     function limpieza4AM() {
         const ahora = new Date();
-        if(ahora.getHours() === 17 && ahora.getMinutes() === 50) {
-            console.log("EJECUTANDO PRUEBA DE LIMPIEZA...");
+        if(ahora.getHours() === 17 && ahora.getMinutes() === 55) {
+            console.log("LIMPIEZA AUTOMÁTICA ACTIVADA");
             document.getElementById('id-terminado').innerHTML = "";
             guardarNube();
         }
@@ -194,8 +194,9 @@
             document.getElementById('login-overlay').style.display = 'none';
             document.getElementById('display-user').innerText = localStorage.getItem('qc_user');
             document.getElementById('display-id').innerText = localStorage.getItem('qc_id');
-            cargarDatosNube(); setInterval(cargarDatosNube, 5000);
-            setInterval(limpieza4AM, 60000);
+            cargarDatosNube(); 
+            setInterval(cargarDatosNube, 5000);
+            setInterval(limpieza4AM, 10000); // Revisamos más seguido (cada 10 seg) para la prueba
             setInterval(() => {
                 document.querySelectorAll('.card').forEach(c => {
                     const inicio = c.getAttribute('data-reloj-inicio');
