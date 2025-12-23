@@ -74,8 +74,11 @@
 <div id="historial" class="view">
     <div class="top-bar">
         <input type="text" id="searchHistorial" placeholder="🔍 Buscar en historial..." oninput="filtrarHistorial()" style="padding:10px;">
-        <button onclick="exportarCSV()" style="background:#859900; color:white; padding:5px 10px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">📊 EXCEL</button>
-    </div>
+<div class="top-bar" style="display: flex; justify-content: space-between; align-items: center;">
+    <input type="text" id="searchHistorial" placeholder="🔍 Buscar en historial..." oninput="filtrarHistorial()" style="padding:10px; width: 250px;">
+    
+    <button onclick="exportarCSV()" style="background:#859900; color:white; padding:10px 25px; border:none; border-radius:4px; font-weight:bold; cursor:pointer; font-size: 14px; text-transform: uppercase;">📊 EXCEL</button>
+</div>
     <div style="padding:10px; background: #073642; border-radius: 8px;">
         <table>
             <thead><tr><th>Fecha</th><th>Lote</th><th>Inspector</th><th>T. Espera</th><th>T. Revisión</th><th>T. Total</th></tr></thead>
@@ -292,3 +295,4 @@
 </body>
 
 </html>
+
