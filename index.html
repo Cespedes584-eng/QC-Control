@@ -14,7 +14,7 @@
         .btn-salir { background: #dc3545; color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; }
 
         .tabs { display: flex; justify-content: center; gap: 10px; margin: 10px 0; }
-        .tab-btn { padding: 8px 20px; cursor: pointer; background: #586e75; border: none; color: white; font-weight: bold; border-radius: 4px; font-size: 13px; text-transform: capitalize; }
+        .tab-btn { padding: 8px 20px; cursor: pointer; background: #586e75; border: none; color: white; font-weight: bold; border-radius: 4px; font-size: 13px; }
         .tab-btn.active { background: #859900; }
         
         .view { display: none; }
@@ -26,12 +26,7 @@
         .login-box input { display: block; margin: 15px auto; padding: 12px; width: 90%; border-radius: 4px; border: none; font-size: 16px; }
         .btn-login { background: #859900; color: white; padding: 12px 60px; border: none; cursor: pointer; font-weight: bold; border-radius: 4px; width: 100%; }
 
-        /* MODAL */
-        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); }
-        .modal-content { background-color: #073642; margin: 5% auto; padding: 25px; border: 1px solid #268bd2; width: 50%; border-radius: 8px; color: white; line-height: 1.6; }
-        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
-
-        /* BARRA DE HERRAMIENTAS */
+        /* BARRA DE HERRAMIENTAS - CENTRADA Y SEPARADA */
         .top-bar { display: flex; justify-content: space-between; align-items: center; background: #073642; padding: 12px 20px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #586e75; }
         .register-zone { flex: 2; display: flex; justify-content: center; gap: 8px; padding: 0 20px; }
 
@@ -48,11 +43,16 @@
         .card { background: white; color: #333; margin: 10px; padding: 12px; border-radius: 4px; position: relative; box-shadow: 0 3px 5px rgba(0,0,0,0.3); }
         .card h3 { margin: 0 0 5px 0; font-size: 15px; color: #000; font-weight: 800; }
         .btn-action { width: 100%; margin-top: 8px; padding: 10px; border: none; color: white; cursor: pointer; font-weight: 900; border-radius: 4px; text-transform: uppercase; font-size: 11px; }
-        .badge-linea { background: #268bd2; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 5px; vertical-align: middle; text-transform: capitalize; }
+        .badge-linea { background: #268bd2; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 5px; vertical-align: middle; }
         
-        .linea-tiempo { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 3px; border-bottom: 1px dashed #ddd; }
+        /* MODAL */
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); }
+        .modal-content { background-color: #073642; margin: 5% auto; padding: 25px; border: 1px solid #268bd2; width: 50%; border-radius: 8px; color: white; line-height: 1.6; }
+        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+
         table { width: 100%; background: white; color: #333; border-collapse: collapse; }
         th, td { border: 1px solid #ccc; padding: 8px; text-align: center; font-size: 11px; }
+        .linea-tiempo { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 3px; border-bottom: 1px dashed #ddd; }
     </style>
 </head>
 <body onload="verificarSession()">
@@ -61,7 +61,7 @@
     <button onclick="abrirInstrucciones()" class="btn-instrucciones">❓ Ayuda</button>
     <h1 class="app-title">CONTROL COATING TRACKER</h1>
     <div style="display: flex; align-items: center; gap: 15px;">
-        <span style="font-size: 12px;">👤 <strong id="display-user"></strong></span>
+        <span style="font-size: 12px;">👤 <strong id="display-user"></strong> (ID: <strong id="display-id"></strong>)</span>
         <button onclick="cerrarSesion()" class="btn-salir">Salir</button>
     </div>
 </div>
@@ -74,10 +74,11 @@
 <div id="instruccionesModal" class="modal">
     <div class="modal-content">
         <span class="close" onclick="cerrarInstrucciones()">&times;</span>
-        <h2 style="color:#268bd2">📘 Guía Rápida</h2>
-        <p>1. <strong>Registro:</strong> Seleccione Línea -> Escriba Lote -> Registrar.</p>
-        <p>2. <strong>Proceso:</strong> Use "Tomar Lote" al iniciar y "Finalizar" al terminar.</p>
-        <p>3. <strong>Reportes:</strong> En el Historial puede descargar el Excel.</p>
+        <h2 style="color:#268bd2">📘 Guía Operativa</h2>
+        <p>1. <strong>Registro:</strong> Seleccione la Línea, escriba el Lote y presione Registrar.</p>
+        <p>2. <strong>Estandarización:</strong> El sistema formatea automáticamente los nombres (Marlon, Sofia, etc.).</p>
+        <p>3. <strong>Alertas:</strong> Al registrar un lote, se envía una notificación automática a Teams.</p>
+        <p>4. <strong>Permanencia:</strong> Los datos se guardan en la nube para que no se pierdan al refrescar.</p>
     </div>
 </div>
 
@@ -126,7 +127,7 @@
 <div id="historial" class="view">
     <div class="top-bar">
         <input type="text" id="searchHistorial" placeholder="🔍 Buscar en historial..." oninput="filtrarHistorial()" style="padding:8px; width: 250px; border-radius:4px; border:none;">
-        <button onclick="exportarCSV()" style="background:#859900; color:white; padding:10px 20px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">📊 Exportar Excel</button>
+        <button onclick="exportarCSV()" style="background:#859900; color:white; padding:10px 25px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">📊 Exportar Excel</button>
     </div>
     <div style="padding:10px; background: #073642; border-radius: 8px;">
         <table>
@@ -139,18 +140,18 @@
 <script>
     const CLAVE_ADMIN = "1234"; 
     const USUARIOS_AUTORIZADOS = [
-        { nombre: "Marlon Cespedes", id: "584" }, { nombre: "Jordan Murillo", id: "594" },
-        { nombre: "Aura Villalobos", id: "2080" }, { nombre: "Priscilla Duran", id: "5227" },
-        { nombre: "Admin", id: "0000" }
+        { nombre: "MARLON CESPEDES", id: "584" }, { nombre: "JORDAN MURILLO", id: "594" },
+        { nombre: "AURA VILLALOBOS", id: "2080" }, { nombre: "PRISCILLA DURAN", id: "5227" },
+        { nombre: "ADMIN", id: "0000" }
     ];
 
     const URL_NUBE = "https://script.google.com/macros/s/AKfycbyyygiMYrywmB_FdxDyyaqn9Lgfrd2vjLCSg9XG7dyS6I6ssO_EEZgywoPrkWF5-oBlUg/exec";
+    const URL_TEAMS = "https://default1687bd898f004ac48a85fff50aefa6.c5.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/0f16c956c99b4582b6b39f3b2b2f8373/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=loErLoCZovfhnCLsw7uxY6F-bLQrnoD-StMZU9sxpOs";
 
-    // Función para convertir a Formato de Título (Primera Mayúscula)
+    let pausaSincro = false;
+
     function toTitleCase(str) {
-        return str.toLowerCase().replace(/(?:^|\s)\w/g, function(match) {
-            return match.toUpperCase();
-        });
+        return str.toLowerCase().replace(/(?:^|\s)\w/g, m => m.toUpperCase());
     }
 
     function formatTime(ms) {
@@ -159,40 +160,88 @@
         return `${Math.floor(s / 60)}m ${s % 60}s`;
     }
 
+    function activarPausa() { pausaSincro = true; setTimeout(() => pausaSincro = false, 10000); }
+
+    async function enviarTeams(lote, linea) {
+        const inspector = toTitleCase(localStorage.getItem('qc_user'));
+        const body = {
+            "type": "message",
+            "attachments": [{
+                "contentType": "application/vnd.microsoft.card.adaptive",
+                "content": {
+                    "type": "AdaptiveCard",
+                    "body": [
+                        {"type": "TextBlock", "text": "📢 Lote Registrado", "weight": "Bolder", "color": "Accent", "size": "Large"},
+                        {"type": "FactSet", "facts": [
+                            {"title": "Lote:", "value": lote},
+                            {"title": "Línea:", "value": linea},
+                            {"title": "Inspector:", "value": inspector}
+                        ]}
+                    ],
+                    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json", "version": "1.4"
+                }
+            }]
+        };
+        fetch(URL_TEAMS, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).catch(() => {});
+    }
+
+    function guardarNube() {
+        const data = { 
+            e: document.getElementById('id-espera').innerHTML, 
+            p: document.getElementById('id-proceso').innerHTML, 
+            t: document.getElementById('id-terminado').innerHTML, 
+            h: document.getElementById('cuerpoHistorial').innerHTML 
+        };
+        fetch(URL_NUBE, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
+    }
+
+    async function cargarDatosNube() {
+        if(pausaSincro) return;
+        try {
+            const res = await fetch(URL_NUBE);
+            const d = await res.json();
+            if(!pausaSincro) {
+                document.getElementById('id-espera').innerHTML = d.e || "";
+                document.getElementById('id-proceso').innerHTML = d.p || "";
+                document.getElementById('id-terminado').innerHTML = d.t || "";
+                document.getElementById('cuerpoHistorial').innerHTML = d.h || "";
+            }
+        } catch(e) {}
+    }
+
     function agregarLote() {
         const input = document.getElementById('loteIn');
         const select = document.getElementById('lineaSelect');
         const lote = input.value.trim();
-        const linea = toTitleCase(select.value); // Formatear línea
-        const inspector = toTitleCase(localStorage.getItem('qc_user')); // Formatear inspector
-        
+        const linea = toTitleCase(select.value);
         if(!lote) return;
+        activarPausa();
         const ahora = Date.now();
         const div = document.createElement('div');
         div.className = 'card';
         div.setAttribute('data-creado', ahora);
         div.setAttribute('data-reloj-inicio', ahora);
         div.innerHTML = `
-            <button style="position:absolute;right:5px;top:5px;border:none;background:none;cursor:pointer;" onclick="eliminarLote(this)">✕</button>
+            <button style="position:absolute;right:5px;top:5px;border:none;background:none;cursor:pointer;color:#ccc;" onclick="eliminarLote(this)">✕</button>
             <h3>Lote: ${lote} <span class="badge-linea">${linea}</span></h3>
-            <p style="font-size:11px; margin:2px 0;">Insp: ${inspector}</p>
-            <div class="resumen-tiempos">
-                <div class="linea-tiempo"><span>⏱ Espera:</span> <span class="cronometro">0m 0s</span></div>
-            </div>
+            <p style="font-size:11px; margin:2px 0;">Insp: ${toTitleCase(localStorage.getItem('qc_user'))}</p>
+            <div class="resumen-tiempos"><div class="linea-tiempo"><span>⏱ Espera:</span> <span class="cronometro">0m 0s</span></div></div>
             <button class="btn-action" style="background:#859900;" onclick="tomar(this, '${lote}', '${linea}')">Tomar Lote</button>`;
         document.getElementById('id-espera').appendChild(div);
         input.value = "";
+        enviarTeams(lote, linea);
         guardarNube();
     }
 
     function tomar(btn, lote, linea) {
+        activarPausa();
         const card = btn.closest('.card');
         const ahora = Date.now();
         const tEspera = ahora - parseInt(card.getAttribute('data-creado'));
         card.setAttribute('data-t-espera', tEspera);
         card.setAttribute('data-reloj-inicio', ahora);
         card.innerHTML = `
-            <button style="position:absolute;right:5px;top:5px;border:none;background:none;cursor:pointer;" onclick="eliminarLote(this)">✕</button>
+            <button style="position:absolute;right:5px;top:5px;border:none;background:none;cursor:pointer;color:#ccc;" onclick="eliminarLote(this)">✕</button>
             <h3>Lote: ${lote} <span class="badge-linea">${linea}</span></h3>
             <div class="resumen-tiempos">
                 <div class="linea-tiempo"><span>⌛ Espera:</span> <span>${formatTime(tEspera)}</span></div>
@@ -204,13 +253,15 @@
     }
 
     function finalizar(btn, lote, linea) {
+        activarPausa();
         const card = btn.closest('.card');
         const ahora = Date.now();
         const tEspera = parseInt(card.getAttribute('data-t-espera'));
         const tRevision = ahora - parseInt(card.getAttribute('data-reloj-inicio'));
         card.setAttribute('data-fin-timestamp', ahora);
+        card.removeAttribute('data-reloj-inicio');
         card.innerHTML = `
-            <button style="position:absolute;right:5px;top:5px;border:none;background:none;cursor:pointer;" onclick="eliminarLote(this)">✕</button>
+            <button style="position:absolute;right:5px;top:5px;border:none;background:none;cursor:pointer;color:#ccc;" onclick="eliminarLote(this)">✕</button>
             <h3>Lote: ${lote} <span class="badge-linea">${linea}</span></h3>
             <div class="resumen-tiempos">
                 <div class="linea-tiempo"><span>⌛ Espera:</span> <span>${formatTime(tEspera)}</span></div>
@@ -218,18 +269,18 @@
                 <div class="linea-tiempo"><span>✅ Total:</span> <span>${formatTime(tEspera + tRevision)}</span></div>
             </div>`;
         document.getElementById('id-terminado').appendChild(card);
-        
         const fila = `<tr><td>${new Date().toLocaleTimeString()}</td><td>${lote}</td><td>${linea}</td><td>${toTitleCase(localStorage.getItem('qc_user'))}</td><td>${formatTime(tEspera)}</td><td>${formatTime(tRevision)}</td><td>${formatTime(tEspera+tRevision)}</td></tr>`;
         document.getElementById('cuerpoHistorial').insertAdjacentHTML('afterbegin', fila);
         guardarNube();
     }
 
     function iniciarSesion() {
-        const u = toTitleCase(document.getElementById('userName').value.trim());
-        const i = document.getElementById('userId').value.trim();
-        const v = USUARIOS_AUTORIZADOS.find(user => toTitleCase(user.nombre) === u && user.id === i);
+        const uInput = document.getElementById('userName').value.trim().toUpperCase();
+        const iInput = document.getElementById('userId').value.trim();
+        const v = USUARIOS_AUTORIZADOS.find(u => u.nombre === uInput && u.id === iInput);
         if(v) { 
             localStorage.setItem('qc_user', v.nombre); 
+            localStorage.setItem('qc_id', v.id); 
             location.reload(); 
         } else {
             document.getElementById('login-error').style.display = 'block';
@@ -240,6 +291,9 @@
         if(localStorage.getItem('qc_user')) {
             document.getElementById('login-overlay').style.display = 'none';
             document.getElementById('display-user').innerText = toTitleCase(localStorage.getItem('qc_user'));
+            document.getElementById('display-id').innerText = localStorage.getItem('qc_id');
+            cargarDatosNube();
+            setInterval(cargarDatosNube, 5000);
             setInterval(() => {
                 document.querySelectorAll('.card').forEach(c => {
                     const inicio = c.getAttribute('data-reloj-inicio');
@@ -252,6 +306,8 @@
         }
     }
 
+    function eliminarLote(btn) { if(prompt("Clave:") === CLAVE_ADMIN) { btn.closest('.card').remove(); guardarNube(); } }
+    function limpiarConClave() { if(prompt("Clave:") === CLAVE_ADMIN) { document.querySelectorAll('.card').forEach(c => c.remove()); guardarNube(); } }
     function abrirInstrucciones() { document.getElementById("instruccionesModal").style.display = "block"; }
     function cerrarInstrucciones() { document.getElementById("instruccionesModal").style.display = "none"; }
     function cerrarSesion() { localStorage.clear(); location.reload(); }
@@ -269,9 +325,16 @@
         const q = document.getElementById('searchHistorial').value.toLowerCase();
         document.querySelectorAll('#cuerpoHistorial tr').forEach(row => row.style.display = row.innerText.toLowerCase().includes(q) ? "" : "none");
     }
-    function guardarNube() { /* Lógica de guardado */ }
-    function eliminarLote(btn) { if(prompt("Clave:") === CLAVE_ADMIN) btn.closest('.card').remove(); }
-    function limpiarConClave() { if(prompt("Clave:") === CLAVE_ADMIN) { document.querySelectorAll('.card').forEach(c => c.remove()); } }
+    function exportarCSV() {
+        let csv = "\uFEFF";
+        document.querySelectorAll("table tr").forEach(f => {
+            csv += Array.from(f.querySelectorAll("th, td")).map(c => `"${c.innerText}"`).join(",") + "\r\n";
+        });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+        link.download = "Reporte_QC.csv";
+        link.click();
+    }
 </script>
 </body>
 </html>
