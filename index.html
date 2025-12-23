@@ -2,8 +2,9 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>QC Control PRO - Final Fix</title>
+    <title>QC Control PRO - Colores Originales</title>
     <style>
+        /* Estilos Base Originales */
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #002b36; color: white; margin: 0; padding: 15px; }
         .user-bar { background: #073642; padding: 10px; display: flex; justify-content: space-between; border-bottom: 2px solid #268bd2; align-items: center; }
         .tabs { display: flex; justify-content: center; gap: 10px; margin: 15px 0; }
@@ -12,21 +13,30 @@
         .view { display: none; }
         .view.active { display: block; }
         
+        /* Top Bar */
         .top-bar { display: grid; grid-template-columns: 1fr 2fr 1fr; align-items: center; background: #073642; padding: 15px; border-radius: 8px; margin-bottom: 20px; gap: 20px; }
         .input-lote { padding: 12px; border-radius: 4px; border: none; width: 280px; font-size: 16px; font-weight: bold; }
+        
+        /* Dashboard y Columnas */
         .dashboard { display: flex; gap: 10px; }
         .column { background: #073642; width: 33.33%; min-height: 600px; border-radius: 5px; border: 1px solid #586e75; }
-        .column h2 { text-align: center; font-size: 14px; background: #002b36; margin: 0; padding: 12px; color: #93a1a1; }
+        .column h2 { text-align: center; font-size: 14px; background: #002b36; margin: 0; padding: 12px; color: #93a1a1; text-transform: uppercase; }
         
-        .card { background: white; color: #333; margin: 12px; padding: 15px; border-radius: 4px; border-left: 6px solid #268bd2; position: relative; }
-        .card h3 { margin: 0; font-size: 18px; font-weight: 800; }
+        /* Tarjetas (Cards) - Estilo Original Restaurado */
+        .card { background: white; color: #333; margin: 12px; padding: 15px; border-radius: 4px; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .card h3 { margin: 0 0 5px 0; font-size: 18px; color: #000; font-weight: 800; }
+        .btn-action { width: 100%; margin-top: 10px; padding: 12px; border: none; color: white; cursor: pointer; font-weight: 900; border-radius: 4px; text-transform: uppercase; }
+        .btn-delete { position: absolute; top: 5px; right: 5px; background: none; border: none; color: #ccc; cursor: pointer; font-size: 18px; }
         
-        /* Buscador Historial */
-        .historial-header { background: #073642; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; gap: 15px; align-items: center; }
-        #searchHistorial { padding: 12px; border-radius: 4px; border: none; flex-grow: 1; font-size: 15px; }
+        /* Tiempos dentro de la tarjeta */
+        .resumen-tiempos { background: #f8f9fa; padding: 10px; border-radius: 4px; margin-top: 10px; border: 1px solid #dee2e6; }
+        .linea-tiempo { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; border-bottom: 1px dashed #ddd; }
         
+        /* Historial */
+        .historial-header { background: #073642; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; gap: 10px; }
+        #searchHistorial { padding: 10px; flex-grow: 1; border-radius: 4px; border: none; }
         table { width: 100%; background: white; color: #333; border-collapse: collapse; }
-        th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: center; font-size: 12px; }
     </style>
 </head>
 <body onload="verificarSession()">
@@ -59,62 +69,103 @@
 
 <div id="historial" class="view">
     <div class="historial-header">
-        <input type="text" id="searchHistorial" placeholder="🔍 Buscar por Lote o Inspector..." oninput="filtrarHistorial()">
-        <button onclick="exportarCSV()" style="background:#859900; color:white; padding:12px 25px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">📊 EXCEL</button>
+        <input type="text" id="searchHistorial" placeholder="🔍 Buscar en historial (Lote o Inspector)..." oninput="filtrarHistorial()">
+        <button onclick="exportarCSV()" style="background:#859900; color:white; padding:10px 20px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">📊 EXCEL</button>
     </div>
     <table>
-        <thead><tr><th>Fecha</th><th>Lote</th><th>Inspector</th><th>T. Total</th></tr></thead>
+        <thead><tr><th>Fecha</th><th>Lote</th><th>Inspector</th><th>T. Espera</th><th>T. Revisión</th><th>T. Total</th></tr></thead>
         <tbody id="cuerpoHistorial"></tbody>
     </table>
 </div>
 
 <script>
     const URL_NUBE = "https://script.google.com/macros/s/AKfycbyyygiMYrywmB_FdxDyyaqn9Lgfrd2vjLCSg9XG7dyS6I6ssO_EEZgywoPrkWF5-oBlUg/exec";
-    let bloqueoSync = false;
+    const CLAVE_ADMIN = "1234";
+    let pausaSync = false;
 
-    // --- FUNCIÓN DE LIMPIEZA TOTAL ---
-    function ejecutarLimpieza() {
-        const ahora = new Date();
-        // HORA DE PRUEBA: 18:35 (6:35 PM)
-        if(ahora.getHours() === 18 && ahora.getMinutes() === 35) {
-            if(!bloqueoSync) {
-                bloqueoSync = true; // Detiene cualquier descarga de datos viejos
-                console.log("Iniciando Limpieza de Turno...");
-                
-                // 1. Limpiar visualmente
-                document.getElementById('id-terminado').innerHTML = "";
-                
-                // 2. Guardar estado vacío en la nube inmediatamente
-                fuerzaGuardado();
-                
-                // 3. Mantener bloqueo por 50 segundos para asegurar que la nube procese
-                setTimeout(() => { 
-                    bloqueoSync = false; 
-                    console.log("Sincronización reactivada");
-                }, 50000);
+    function formatTime(ms) {
+        if(!ms || ms < 0) return "0m 0s";
+        let s = Math.floor(ms / 1000);
+        return `${Math.floor(s / 60)}m ${s % 60}s`;
+    }
+
+    // --- LÓGICA AUTO-BORRADO 1 MINUTO ---
+    function checkAutoBorrado() {
+        const ahora = Date.now();
+        const limite = 1 * 60 * 1000; // 1 minuto para prueba
+        let huboCambios = false;
+
+        document.querySelectorAll('#id-terminado .card').forEach(card => {
+            const finTime = parseInt(card.getAttribute('data-fin-timestamp'));
+            if (finTime && (ahora - finTime > limite)) {
+                card.remove();
+                huboCambios = true;
             }
-        }
-    }
-
-    function filtrarHistorial() {
-        const q = document.getElementById('searchHistorial').value.toLowerCase();
-        document.querySelectorAll('#cuerpoHistorial tr').forEach(row => {
-            row.style.display = row.innerText.toLowerCase().includes(q) ? "" : "none";
         });
+
+        if (huboCambios) { guardarNube(); }
     }
 
-    function fuerzaGuardado() {
-        const data = {
-            e: document.getElementById('id-espera').innerHTML,
-            p: document.getElementById('id-proceso').innerHTML,
-            t: document.getElementById('id-terminado').innerHTML,
-            h: document.getElementById('cuerpoHistorial').innerHTML
-        };
+    function agregarLote() {
+        const lote = document.getElementById('loteIn').value.trim();
+        if(!lote) return;
+        activarPausa();
+        const ahora = Date.now();
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.style.borderLeft = "6px solid #268bd2"; // Azul Espera
+        div.setAttribute('data-creado', ahora);
+        div.setAttribute('data-reloj-inicio', ahora);
+        div.innerHTML = `<button class="btn-delete" onclick="eliminarLote(this)">✕</button><h3>LOTE: ${lote}</h3><p>Inspector: ${localStorage.getItem('qc_user')}</p><div class="resumen-tiempos"><div class="linea-tiempo"><span>⏱ Espera:</span> <span class="cronometro">0m 0s</span></div></div><button class="btn-action" style="background:#859900;" onclick="tomar(this, '${lote}')">TOMAR LOTE</button>`;
+        document.getElementById('id-espera').appendChild(div);
+        document.getElementById('loteIn').value = "";
+        guardarNube();
+    }
+
+    function tomar(btn, lote) {
+        activarPausa();
+        const card = btn.closest('.card');
+        const ahora = Date.now();
+        const tEspera = ahora - parseInt(card.getAttribute('data-creado'));
+        card.setAttribute('data-t-espera', tEspera);
+        card.setAttribute('data-reloj-inicio', ahora);
+        card.style.borderLeft = "6px solid #cb4b16"; // Naranja Revisión
+        card.innerHTML = `<button class="btn-delete" onclick="eliminarLote(this)">✕</button><h3>LOTE: ${lote}</h3><div class="resumen-tiempos"><div class="linea-tiempo"><span>⌛ Espera:</span> <span>${formatTime(tEspera)}</span></div><div class="linea-tiempo"><span>⏱ Revisión:</span> <span class="cronometro">0m 0s</span></div></div><button class="btn-action" style="background:#cb4b16;" onclick="finalizar(this, '${lote}')">FINALIZAR</button>`;
+        document.getElementById('id-proceso').appendChild(card);
+        guardarNube();
+    }
+
+    function finalizar(btn, lote) {
+        activarPausa();
+        const card = btn.closest('.card');
+        const ahora = Date.now();
+        const tEspera = parseInt(card.getAttribute('data-t-espera'));
+        const tRevision = ahora - parseInt(card.getAttribute('data-reloj-inicio'));
+        const tTotal = tEspera + tRevision;
+        
+        card.setAttribute('data-fin-timestamp', ahora);
+        card.removeAttribute('data-reloj-inicio');
+        card.style.borderLeft = "6px solid #859900"; // Verde Terminado
+        card.innerHTML = `<button class="btn-delete" onclick="eliminarLote(this)">✕</button><h3>LOTE: ${lote}</h3><div class="resumen-tiempos"><div class="linea-tiempo"><span>⌛ Espera:</span> <span>${formatTime(tEspera)}</span></div><div class="linea-tiempo"><span>🔍 Revisión:</span> <span>${formatTime(tRevision)}</span></div><div class="linea-tiempo"><span>✅ TOTAL:</span> <span>${formatTime(tTotal)}</span></div></div><small style="color:gray">Auto-limpieza en 1 min</small>`;
+        
+        document.getElementById('id-terminado').appendChild(card);
+        
+        const fila = `<tr><td>${new Date().toLocaleString()}</td><td>${lote}</td><td>${localStorage.getItem('qc_user')}</td><td>${formatTime(tEspera)}</td><td>${formatTime(tRevision)}</td><td>${formatTime(tTotal)}</td></tr>`;
+        document.getElementById('cuerpoHistorial').insertAdjacentHTML('afterbegin', fila);
+        
+        guardarNube();
+    }
+
+    // Funciones de Soporte
+    function activarPausa() { pausaSync = true; setTimeout(() => { pausaSync = false; }, 8000); }
+    
+    function guardarNube() {
+        const data = { e: document.getElementById('id-espera').innerHTML, p: document.getElementById('id-proceso').innerHTML, t: document.getElementById('id-terminado').innerHTML, h: document.getElementById('cuerpoHistorial').innerHTML };
         fetch(URL_NUBE, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
     }
 
     async function cargarDatosNube() {
-        if(bloqueoSync) return;
+        if(pausaSync) return;
         try {
             const res = await fetch(URL_NUBE);
             const d = await res.json();
@@ -125,13 +176,29 @@
         } catch(e) {}
     }
 
+    function filtrarHistorial() {
+        const q = document.getElementById('searchHistorial').value.toLowerCase();
+        document.querySelectorAll('#cuerpoHistorial tr').forEach(row => {
+            row.style.display = row.innerText.toLowerCase().includes(q) ? "" : "none";
+        });
+    }
+
     function verificarSession() {
         if(localStorage.getItem('qc_user')) {
             document.getElementById('display-user').innerText = localStorage.getItem('qc_user');
             document.getElementById('display-id').innerText = localStorage.getItem('qc_id');
             cargarDatosNube();
-            setInterval(cargarDatosNube, 5000);
-            setInterval(ejecutarLimpieza, 1000); // Revisa el reloj cada segundo
+            setInterval(cargarDatosNube, 6000);
+            setInterval(checkAutoBorrado, 5000);
+            setInterval(() => {
+                document.querySelectorAll('.card').forEach(c => {
+                    const inicio = c.getAttribute('data-reloj-inicio');
+                    if(inicio) {
+                        const crono = c.querySelector('.cronometro');
+                        if(crono) crono.innerText = formatTime(Date.now() - parseInt(inicio));
+                    }
+                });
+            }, 1000);
         }
     }
 
@@ -142,7 +209,12 @@
         btn.classList.add('active');
     }
     
-    // Las demás funciones de agregarLote, tomar, finalizar, etc., se mantienen intactas.
+    function cerrarSesion() { localStorage.clear(); location.reload(); }
+    function eliminarLote(btn) { if(confirm("¿Eliminar?")) { btn.closest('.card').remove(); guardarNube(); } }
+    function filtrarFlujo() {
+        const q = document.getElementById('searchFlujo').value.toLowerCase();
+        document.querySelectorAll('#flujo .card').forEach(c => c.style.display = c.innerText.toLowerCase().includes(q) ? "block" : "none");
+    }
 </script>
 </body>
 </html>
