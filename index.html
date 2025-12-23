@@ -26,7 +26,7 @@
         .login-box input { display: block; margin: 15px auto; padding: 12px; width: 90%; border-radius: 4px; border: none; font-size: 16px; }
         .btn-login { background: #859900; color: white; padding: 12px 60px; border: none; cursor: pointer; font-weight: bold; border-radius: 4px; width: 100%; }
 
-        /* BARRA DE HERRAMIENTAS - CENTRADA Y SEPARADA */
+        /* BARRA DE HERRAMIENTAS */
         .top-bar { display: flex; justify-content: space-between; align-items: center; background: #073642; padding: 12px 20px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #586e75; }
         .register-zone { flex: 2; display: flex; justify-content: center; gap: 8px; padding: 0 20px; }
 
@@ -45,9 +45,9 @@
         .btn-action { width: 100%; margin-top: 8px; padding: 10px; border: none; color: white; cursor: pointer; font-weight: 900; border-radius: 4px; text-transform: uppercase; font-size: 11px; }
         .badge-linea { background: #268bd2; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 5px; vertical-align: middle; }
         
-        /* MODAL */
+        /* MODAL AYUDA */
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); }
-        .modal-content { background-color: #073642; margin: 5% auto; padding: 25px; border: 1px solid #268bd2; width: 50%; border-radius: 8px; color: white; line-height: 1.6; }
+        .modal-content { background-color: #073642; margin: 5% auto; padding: 25px; border: 1px solid #268bd2; width: 45%; border-radius: 8px; color: white; line-height: 1.6; }
         .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
 
         table { width: 100%; background: white; color: #333; border-collapse: collapse; }
@@ -74,11 +74,18 @@
 <div id="instruccionesModal" class="modal">
     <div class="modal-content">
         <span class="close" onclick="cerrarInstrucciones()">&times;</span>
-        <h2 style="color:#268bd2">📘 Guía Operativa</h2>
-        <p>1. <strong>Registro:</strong> Seleccione la Línea, escriba el Lote y presione Registrar.</p>
-        <p>2. <strong>Estandarización:</strong> El sistema formatea automáticamente los nombres (Marlon, Sofia, etc.).</p>
-        <p>3. <strong>Alertas:</strong> Al registrar un lote, se envía una notificación automática a Teams.</p>
-        <p>4. <strong>Permanencia:</strong> Los datos se guardan en la nube para que no se pierdan al refrescar.</p>
+        <h2 style="color:#268bd2; border-bottom: 2px solid #268bd2; padding-bottom: 10px;">📘 Guía de Operación</h2>
+        <p><strong>1. Registro de Lotes:</strong> Selecciona la línea, escribe el lote y presiona <b>Registrar</b>. Se enviará una alerta automática a Teams.</p>
+        <p><strong>2. Control de Tiempos:</strong> 
+            <br>• Usa <b>"Tomar Lote"</b> al iniciar la revisión física.
+            <br>• Usa <b>"Finalizar"</b> al terminar la inspección.
+        </p>
+        <p><strong>3. Columna Terminado:</strong> Los lotes finalizados se borrarán automáticamente del tablero después de <b>1 hora</b> para mantener el orden.</p>
+        <p><strong>4. Historial:</strong> En la pestaña superior puedes consultar todos los registros del día y descargar el reporte en <b>Excel</b>.</p>
+        <p><strong>5. Seguridad:</strong> Para eliminar registros manuales se requiere clave. No olvides cerrar sesión al terminar tu turno.</p>
+        <div style="text-align:center; margin-top:20px;">
+            <button onclick="cerrarInstrucciones()" style="background:#268bd2; color:white; border:none; padding:10px 30px; border-radius:4px; cursor:pointer; font-weight:bold;">Entendido</button>
+        </div>
     </div>
 </div>
 
@@ -150,10 +157,7 @@
 
     let pausaSincro = false;
 
-    function toTitleCase(str) {
-        return str.toLowerCase().replace(/(?:^|\s)\w/g, m => m.toUpperCase());
-    }
-
+    function toTitleCase(str) { return str.toLowerCase().replace(/(?:^|\s)\w/g, m => m.toUpperCase()); }
     function formatTime(ms) {
         if(!ms || ms < 0) return "0m 0s";
         let s = Math.floor(ms / 1000);
@@ -207,6 +211,17 @@
                 document.getElementById('cuerpoHistorial').innerHTML = d.h || "";
             }
         } catch(e) {}
+    }
+
+    function checkAutoLimpieza() {
+        const ahora = Date.now();
+        const unaHora = 60 * 60 * 1000;
+        let cambios = false;
+        document.querySelectorAll('#id-terminado .card').forEach(card => {
+            const fin = parseInt(card.getAttribute('data-fin-timestamp'));
+            if (fin && (ahora - fin > unaHora)) { card.remove(); cambios = true; }
+        });
+        if (cambios) guardarNube();
     }
 
     function agregarLote() {
@@ -282,9 +297,7 @@
             localStorage.setItem('qc_user', v.nombre); 
             localStorage.setItem('qc_id', v.id); 
             location.reload(); 
-        } else {
-            document.getElementById('login-error').style.display = 'block';
-        }
+        } else { document.getElementById('login-error').style.display = 'block'; }
     }
 
     function verificarSession() {
@@ -294,6 +307,7 @@
             document.getElementById('display-id').innerText = localStorage.getItem('qc_id');
             cargarDatosNube();
             setInterval(cargarDatosNube, 5000);
+            setInterval(checkAutoLimpieza, 30000);
             setInterval(() => {
                 document.querySelectorAll('.card').forEach(c => {
                     const inicio = c.getAttribute('data-reloj-inicio');
