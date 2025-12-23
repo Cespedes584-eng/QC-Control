@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>QC Control  - Acceso Multi-Usuario</title>
+    <title>Control Coating Tracker</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #002b36; color: white; margin: 0; padding: 15px; }
         .user-bar { background: #073642; padding: 10px; display: flex; justify-content: space-between; border-bottom: 2px solid #268bd2; align-items: center; }
@@ -12,30 +12,58 @@
         .view { display: none; }
         .view.active { display: block; }
         
+        /* LOGIN */
         #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #002b36; z-index: 1000; display: flex; justify-content: center; align-items: center; }
         .login-box { background: #073642; padding: 40px; border: 1px solid #268bd2; text-align: center; border-radius: 8px; width: 320px; }
         .login-box input { display: block; margin: 15px auto; padding: 12px; width: 90%; border-radius: 4px; border: none; font-size: 16px; }
         .btn-login { background: #859900; color: white; padding: 12px 60px; border: none; cursor: pointer; font-weight: bold; border-radius: 4px; width: 100%; }
         #login-error { color: #dc3545; font-weight: bold; font-size: 14px; margin-bottom: 10px; display: none; }
 
-        .top-bar { display: grid; grid-template-columns: 1fr 2fr 1fr; align-items: center; background: #073642; padding: 15px; border-radius: 8px; margin-bottom: 20px; gap: 20px; }
-        .input-lote { padding: 12px; border-radius: 4px; border: none; width: 280px; font-size: 16px; font-weight: bold; }
+        /* MODAL INSTRUCCIONES */
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); }
+        .modal-content { background-color: #073642; margin: 5% auto; padding: 25px; border: 1px solid #268bd2; width: 60%; border-radius: 8px; color: white; line-height: 1.6; max-height: 80vh; overflow-y: auto; }
+        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .modal-content h2 { color: #268bd2; border-bottom: 1px solid #586e75; padding-bottom: 10px; }
+        .modal-content h3 { color: #859900; margin-top: 20px; }
+
+        /* TABLERO */
+        .top-bar { display: grid; grid-template-columns: 1fr 2.5fr 1fr; align-items: center; background: #073642; padding: 15px; border-radius: 8px; margin-bottom: 20px; gap: 20px; }
+        .input-lote { padding: 12px; border-radius: 4px; border: none; width: 200px; font-size: 16px; font-weight: bold; }
+        .select-linea { padding: 11px; border-radius: 4px; border: none; font-size: 16px; background: white; color: #333; font-weight: bold; cursor: pointer; }
         .dashboard { display: flex; gap: 10px; }
         .column { background: #073642; width: 33.33%; min-height: 600px; border-radius: 5px; border: 1px solid #586e75; }
         .column h2 { text-align: center; font-size: 14px; background: #002b36; margin: 0; padding: 12px; color: #93a1a1; }
         
         .card { background: white; color: #333; margin: 12px; padding: 15px; border-radius: 4px; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        .card h3 { margin: 0 0 5px 0; font-size: 18px; color: #000; font-weight: 800; }
+        .card h3 { margin: 0 0 5px 0; font-size: 16px; color: #000; font-weight: 800; }
         .btn-action { width: 100%; margin-top: 10px; padding: 12px; border: none; color: white; cursor: pointer; font-weight: 900; border-radius: 4px; text-transform: uppercase; }
         .btn-delete { position: absolute; top: 5px; right: 5px; background: none; border: none; color: #ccc; cursor: pointer; font-size: 18px; }
         .resumen-tiempos { background: #f8f9fa; padding: 10px; border-radius: 4px; margin-top: 10px; border: 1px solid #dee2e6; }
         .linea-tiempo { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; border-bottom: 1px dashed #ddd; }
+        .badge-linea { background: #268bd2; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-left: 5px; vertical-align: middle; }
         
         table { width: 100%; background: white; color: #333; border-collapse: collapse; }
         th, td { border: 1px solid #ccc; padding: 10px; text-align: center; font-size: 12px; }
     </style>
 </head>
 <body onload="verificarSession()">
+
+<h1 style="text-align: center; color: #268bd2; margin: 10px 0; font-size: 24px; letter-spacing: 1px;">CONTROL COATING TRACKER</h1>
+
+<div id="instruccionesModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="cerrarInstrucciones()">&times;</span>
+        <h2>📘 Guía Operativa: QC Control PRO</h2>
+        
+        <h3>1. Flujo de Trabajo</h3>
+        <p><strong>📥 ESPERA:</strong> Selecciona la línea, escribe el lote y presiona Registrar. Se enviará una alerta a Teams.</p>
+        <p><strong>🔍 REVISIÓN:</strong> Haz clic en "TOMAR LOTE" cuando inicies la inspección física.</p>
+        <p><strong>✅ TERMINADO:</strong> Haz clic en "FINALIZAR" para registrar los tiempos totales en el historial.</p>
+
+        <h3>2. Historial y Excel</h3>
+        <p>En la pestaña <strong>HISTORIAL</strong> puedes buscar lotes antiguos y usar el botón <strong>📊 EXCEL</strong> para descargar el reporte.</p>
+    </div>
+</div>
 
 <div id="login-overlay">
     <div class="login-box">
@@ -49,7 +77,10 @@
 
 <div class="user-bar">
     <span>👤 <strong id="display-user"></strong> (ID: <strong id="display-id"></strong>)</span>
-    <button onclick="cerrarSesion()" style="background:#dc3545; color:white; border:none; padding:5px 15px; border-radius:4px; cursor:pointer;">SALIR</button>
+    <div>
+        <button onclick="abrirInstrucciones()" style="background:#268bd2; color:white; border:none; padding:5px 15px; border-radius:4px; cursor:pointer; margin-right: 10px; font-weight:bold;">❓ INSTRUCCIONES</button>
+        <button onclick="cerrarSesion()" style="background:#dc3545; color:white; border:none; padding:5px 15px; border-radius:4px; cursor:pointer; font-weight:bold;">SALIR</button>
+    </div>
 </div>
 
 <div class="tabs">
@@ -60,9 +91,20 @@
 <div id="flujo" class="view active">
     <div class="top-bar">
         <input type="text" id="searchFlujo" placeholder="🔍 Buscar lote..." oninput="filtrarFlujo()" style="padding:10px;">
-        <div class="registro-central">
-            <input type="text" id="loteIn" class="input-lote" placeholder="ESCRIBIR LOTE..." onkeypress="if(event.key==='Enter') agregarLote()">
-            <button onclick="agregarLote()" style="padding:11px 25px; background:#268bd2; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">REGISTRAR</button>
+        <div class="registro-central" style="display: flex; gap: 5px; align-items: center;">
+            <select id="lineaSelect" class="select-linea">
+                <option value="SOFIA 6F">SOFIA 6F</option>
+                <option value="SOFIA 5F">SOFIA 5F</option>
+                <option value="SOFIA EX">SOFIA EX</option>
+                <option value="VIA">VIA</option>
+                <option value="HEADWAY 27">HEADWAY 27</option>
+                <option value="HEADWAY 21">HEADWAY 21</option>
+                <option value="HEADWAY REGULAR">HEADWAY REGULAR</option>
+                <option value="DUO SHORT">DUO SHORT</option>
+                <option value="DUO LONG">DUO LONG</option>
+            </select>
+            <input type="text" id="loteIn" class="input-lote" placeholder="LOTE..." onkeypress="if(event.key==='Enter') agregarLote()">
+            <button onclick="agregarLote()" style="padding:11px 20px; background:#268bd2; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">REGISTRAR</button>
         </div>
         <button onclick="limpiarConClave()" style="background:#dc3545; color:white; border:none; padding:10px; border-radius:4px; cursor:pointer; font-weight:bold;">LIMPIAR</button>
     </div>
@@ -80,7 +122,7 @@
     </div>
     <div style="padding:10px; background: #073642; border-radius: 8px;">
         <table>
-            <thead><tr><th>Fecha</th><th>Lote</th><th>Inspector</th><th>T. Espera</th><th>T. Revisión</th><th>T. Total</th></tr></thead>
+            <thead><tr><th>Fecha</th><th>Lote</th><th>Línea</th><th>Inspector</th><th>T. Espera</th><th>T. Revisión</th><th>T. Total</th></tr></thead>
             <tbody id="cuerpoHistorial"></tbody>
         </table>
     </div>
@@ -88,7 +130,6 @@
 
 <script>
     const CLAVE_ADMIN = "1234"; 
-    // LISTA ACTUALIZADA DE USUARIOS
     const USUARIOS_AUTORIZADOS = [
         { nombre: "MARLON CESPEDES", id: "584" },
         { nombre: "JORDAN MURILLO", id: "594" },
@@ -102,13 +143,17 @@
 
     let pausaSincro = false;
 
+    function abrirInstrucciones() { document.getElementById("instruccionesModal").style.display = "block"; }
+    function cerrarInstrucciones() { document.getElementById("instruccionesModal").style.display = "none"; }
+    window.onclick = function(event) { if (event.target == document.getElementById("instruccionesModal")) cerrarInstrucciones(); }
+
     function formatTime(ms) {
         if(!ms || ms < 0) return "0m 0s";
         let s = Math.floor(ms / 1000);
         return `${Math.floor(s / 60)}m ${s % 60}s`;
     }
 
-    async function enviarTeams(lote) {
+    async function enviarTeams(lote, linea) {
         const body = {
             "type": "message",
             "attachments": [{
@@ -119,6 +164,7 @@
                         {"type": "TextBlock", "text": "📢 LOTE REGISTRADO", "weight": "Bolder", "color": "Accent", "size": "Large"},
                         {"type": "FactSet", "facts": [
                             {"title": "Lote:", "value": lote},
+                            {"title": "Línea:", "value": linea},
                             {"title": "Inspector:", "value": localStorage.getItem('qc_user') || "Desconocido"}
                         ]}
                     ],
@@ -130,10 +176,7 @@
         fetch(URL_TEAMS, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).catch(() => {});
     }
 
-    function activarPausa() { 
-        pausaSincro = true; 
-        setTimeout(() => { pausaSincro = false; }, 10000); 
-    }
+    function activarPausa() { pausaSincro = true; setTimeout(() => { pausaSincro = false; }, 10000); }
 
     function guardarNube() {
         const data = { e: document.getElementById('id-espera').innerHTML, p: document.getElementById('id-proceso').innerHTML, t: document.getElementById('id-terminado').innerHTML, h: document.getElementById('cuerpoHistorial').innerHTML };
@@ -156,7 +199,9 @@
 
     function agregarLote() {
         const input = document.getElementById('loteIn');
+        const select = document.getElementById('lineaSelect');
         const lote = input.value.trim();
+        const linea = select.value;
         if(!lote) return;
         activarPausa();
         const ahora = Date.now();
@@ -165,14 +210,15 @@
         div.style.borderLeft = "6px solid #268bd2";
         div.setAttribute('data-creado', ahora);
         div.setAttribute('data-reloj-inicio', ahora);
-        div.innerHTML = `<button class="btn-delete" onclick="eliminarLote(this)">✕</button><h3>LOTE: ${lote}</h3><p>Inspector: ${localStorage.getItem('qc_user')}</p><div class="resumen-tiempos"><div class="linea-tiempo"><span>⏱ Espera:</span> <span class="cronometro">0m 0s</span></div></div><button class="btn-action" style="background:#859900;" onclick="tomar(this, '${lote}')">TOMAR LOTE</button>`;
+        div.setAttribute('data-linea', linea);
+        div.innerHTML = `<button class="btn-delete" onclick="eliminarLote(this)">✕</button><h3>LOTE: ${lote} <span class="badge-linea">${linea}</span></h3><p>Inspector: ${localStorage.getItem('qc_user')}</p><div class="resumen-tiempos"><div class="linea-tiempo"><span>⏱ Espera:</span> <span class="cronometro">0m 0s</span></div></div><button class="btn-action" style="background:#859900;" onclick="tomar(this, '${lote}', '${linea}')">TOMAR LOTE</button>`;
         document.getElementById('id-espera').appendChild(div);
         input.value = "";
-        enviarTeams(lote); 
+        enviarTeams(lote, linea); 
         guardarNube();
     }
 
-    function tomar(btn, lote) {
+    function tomar(btn, lote, linea) {
         activarPausa();
         const card = btn.closest('.card');
         const ahora = Date.now();
@@ -180,12 +226,12 @@
         card.setAttribute('data-t-espera', tEspera);
         card.setAttribute('data-reloj-inicio', ahora);
         card.style.borderLeft = "6px solid #cb4b16";
-        card.innerHTML = `<button class="btn-delete" onclick="eliminarLote(this)">✕</button><h3>LOTE: ${lote}</h3><div class="resumen-tiempos"><div class="linea-tiempo"><span>⌛ Espera:</span> <span>${formatTime(tEspera)}</span></div><div class="linea-tiempo"><span>⏱ Revisión:</span> <span class="cronometro">0m 0s</span></div></div><button class="btn-action" style="background:#cb4b16;" onclick="finalizar(this, '${lote}')">FINALIZAR</button>`;
+        card.innerHTML = `<button class="btn-delete" onclick="eliminarLote(this)">✕</button><h3>LOTE: ${lote} <span class="badge-linea">${linea}</span></h3><div class="resumen-tiempos"><div class="linea-tiempo"><span>⌛ Espera:</span> <span>${formatTime(tEspera)}</span></div><div class="linea-tiempo"><span>⏱ Revisión:</span> <span class="cronometro">0m 0s</span></div></div><button class="btn-action" style="background:#cb4b16;" onclick="finalizar(this, '${lote}', '${linea}')">FINALIZAR</button>`;
         document.getElementById('id-proceso').appendChild(card);
         guardarNube();
     }
 
-    function finalizar(btn, lote) {
+    function finalizar(btn, lote, linea) {
         activarPausa();
         const card = btn.closest('.card');
         const ahora = Date.now();
@@ -195,9 +241,9 @@
         card.setAttribute('data-fin-timestamp', ahora);
         card.removeAttribute('data-reloj-inicio');
         card.style.borderLeft = "6px solid #859900";
-        card.innerHTML = `<button class="btn-delete" onclick="eliminarLote(this)">✕</button><h3>LOTE: ${lote}</h3><div class="resumen-tiempos"><div class="linea-tiempo"><span>⌛ Espera:</span> <span>${formatTime(tEspera)}</span></div><div class="linea-tiempo"><span>🔍 Revisión:</span> <span>${formatTime(tRevision)}</span></div><div class="linea-tiempo"><span>✅ TOTAL:</span> <span>${formatTime(tTotal)}</span></div></div>`;
+        card.innerHTML = `<button class="btn-delete" onclick="eliminarLote(this)">✕</button><h3>LOTE: ${lote} <span class="badge-linea">${linea}</span></h3><div class="resumen-tiempos"><div class="linea-tiempo"><span>⌛ Espera:</span> <span>${formatTime(tEspera)}</span></div><div class="linea-tiempo"><span>🔍 Revisión:</span> <span>${formatTime(tRevision)}</span></div><div class="linea-tiempo"><span>✅ TOTAL:</span> <span>${formatTime(tTotal)}</span></div></div>`;
         document.getElementById('id-terminado').appendChild(card);
-        const fila = `<tr><td>${new Date().toLocaleString()}</td><td>${lote}</td><td>${localStorage.getItem('qc_user')}</td><td>${formatTime(tEspera)}</td><td>${formatTime(tRevision)}</td><td>${formatTime(tTotal)}</td></tr>`;
+        const fila = `<tr><td>${new Date().toLocaleString()}</td><td>${lote}</td><td>${linea}</td><td>${localStorage.getItem('qc_user')}</td><td>${formatTime(tEspera)}</td><td>${formatTime(tRevision)}</td><td>${formatTime(tTotal)}</td></tr>`;
         document.getElementById('cuerpoHistorial').insertAdjacentHTML('afterbegin', fila);
         guardarNube();
     }
@@ -217,7 +263,6 @@
         const u = document.getElementById('userName').value.trim().toUpperCase();
         const i = document.getElementById('userId').value.trim();
         const v = USUARIOS_AUTORIZADOS.find(user => user.nombre === u && user.id === i);
-        
         if(v) { 
             document.getElementById('login-error').style.display = 'none';
             localStorage.setItem('qc_user', v.nombre); 
@@ -297,5 +342,4 @@
     function cerrarSesion() { localStorage.clear(); location.reload(); }
 </script>
 </body>
-
 </html>
