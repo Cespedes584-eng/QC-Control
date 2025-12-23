@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>QC Control PRO - Final Corregido</title>
+    <title>QC Control PRO - Teams Activo</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #002b36; color: white; margin: 0; padding: 15px; }
         .user-bar { background: #073642; padding: 10px; display: flex; justify-content: space-between; border-bottom: 2px solid #268bd2; align-items: center; }
@@ -23,7 +23,7 @@
         .column { background: #073642; width: 33.33%; min-height: 600px; border-radius: 5px; border: 1px solid #586e75; }
         .column h2 { text-align: center; font-size: 14px; background: #002b36; margin: 0; padding: 12px; color: #93a1a1; }
         
-        .card { background: white; color: #333; margin: 12px; padding: 15px; border-radius: 4px; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: all 0.3s; }
+        .card { background: white; color: #333; margin: 12px; padding: 15px; border-radius: 4px; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         .card h3 { margin: 0 0 5px 0; font-size: 18px; color: #000; font-weight: 800; }
         .btn-action { width: 100%; margin-top: 10px; padding: 12px; border: none; color: white; cursor: pointer; font-weight: 900; border-radius: 4px; text-transform: uppercase; }
         .btn-delete { position: absolute; top: 5px; right: 5px; background: none; border: none; color: #ccc; cursor: pointer; font-size: 18px; }
@@ -88,6 +88,8 @@
     const CLAVE_ADMIN = "1234"; 
     const USUARIOS_AUTORIZADOS = [{ nombre: "MARLON CESPEDES", id: "584" }, { nombre: "ADMIN", id: "0000" }];
     const URL_NUBE = "https://script.google.com/macros/s/AKfycbyyygiMYrywmB_FdxDyyaqn9Lgfrd2vjLCSg9XG7dyS6I6ssO_EEZgywoPrkWF5-oBlUg/exec";
+    
+    // --- URL DE TEAMS (Power Automate) ---
     const URL_TEAMS = "https://default1687bd898f004ac48a85fff50aefa6.c5.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/0f16c956c99b4582b6b39f3b2b2f8373/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=loErLoCZovfhnCLsw7uxY6F-bLQrnoD-StMZU9sxpOs";
 
     let pausaSincro = false;
@@ -98,18 +100,35 @@
         return `${Math.floor(s / 60)}m ${s % 60}s`;
     }
 
+    // FUNCIÓN DE ENVÍO A TEAMS REESTABLECIDA
     async function enviarTeams(lote) {
-        const datos = { "lote": lote, "inspector": localStorage.getItem('qc_user'), "fecha": new Date().toLocaleString() };
-        fetch(URL_TEAMS, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) }).catch(() => {});
+        const payload = {
+            "lote": lote,
+            "inspector": localStorage.getItem('qc_user') || "Desconocido",
+            "fecha": new Date().toLocaleString(),
+            "estado": "REGISTRADO"
+        };
+
+        fetch(URL_TEAMS, {
+            method: 'POST',
+            mode: 'no-cors', // Evita bloqueos de seguridad del navegador
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).catch(e => console.log("Error Teams:", e));
     }
 
     function activarPausa() { 
         pausaSincro = true; 
-        setTimeout(() => { pausaSincro = false; }, 10000); // Pausa de 10 seg para evitar el "rebote"
+        setTimeout(() => { pausaSincro = false; }, 10000); 
     }
 
     function guardarNube() {
-        const data = { e: document.getElementById('id-espera').innerHTML, p: document.getElementById('id-proceso').innerHTML, t: document.getElementById('id-terminado').innerHTML, h: document.getElementById('cuerpoHistorial').innerHTML };
+        const data = { 
+            e: document.getElementById('id-espera').innerHTML, 
+            p: document.getElementById('id-proceso').innerHTML, 
+            t: document.getElementById('id-terminado').innerHTML, 
+            h: document.getElementById('cuerpoHistorial').innerHTML 
+        };
         fetch(URL_NUBE, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
     }
 
@@ -118,7 +137,7 @@
         try {
             const res = await fetch(URL_NUBE);
             const d = await res.json();
-            if(!pausaSincro) { // Doble check
+            if(!pausaSincro) {
                 document.getElementById('id-espera').innerHTML = d.e || "";
                 document.getElementById('id-proceso').innerHTML = d.p || "";
                 document.getElementById('id-terminado').innerHTML = d.t || "";
@@ -128,8 +147,10 @@
     }
 
     function agregarLote() {
-        const lote = document.getElementById('loteIn').value.trim();
+        const loteIn = document.getElementById('loteIn');
+        const lote = loteIn.value.trim();
         if(!lote) return;
+        
         activarPausa();
         const ahora = Date.now();
         const div = document.createElement('div');
@@ -138,9 +159,11 @@
         div.setAttribute('data-creado', ahora);
         div.setAttribute('data-reloj-inicio', ahora);
         div.innerHTML = `<button class="btn-delete" onclick="eliminarLote(this)">✕</button><h3>LOTE: ${lote}</h3><p>Inspector: ${localStorage.getItem('qc_user')}</p><div class="resumen-tiempos"><div class="linea-tiempo"><span>⏱ Espera:</span> <span class="cronometro">0m 0s</span></div></div><button class="btn-action" style="background:#859900;" onclick="tomar(this, '${lote}')">TOMAR LOTE</button>`;
+        
         document.getElementById('id-espera').appendChild(div);
-        document.getElementById('loteIn').value = "";
-        enviarTeams(lote);
+        loteIn.value = "";
+        
+        enviarTeams(lote); // Llamada a la alerta
         guardarNube();
     }
 
@@ -169,6 +192,7 @@
         card.style.borderLeft = "6px solid #859900";
         card.innerHTML = `<button class="btn-delete" onclick="eliminarLote(this)">✕</button><h3>LOTE: ${lote}</h3><div class="resumen-tiempos"><div class="linea-tiempo"><span>⌛ Espera:</span> <span>${formatTime(tEspera)}</span></div><div class="linea-tiempo"><span>🔍 Revisión:</span> <span>${formatTime(tRevision)}</span></div><div class="linea-tiempo"><span>✅ TOTAL:</span> <span>${formatTime(tTotal)}</span></div></div>`;
         document.getElementById('id-terminado').appendChild(card);
+        
         const fila = `<tr><td>${new Date().toLocaleString()}</td><td>${lote}</td><td>${localStorage.getItem('qc_user')}</td><td>${formatTime(tEspera)}</td><td>${formatTime(tRevision)}</td><td>${formatTime(tTotal)}</td></tr>`;
         document.getElementById('cuerpoHistorial').insertAdjacentHTML('afterbegin', fila);
         guardarNube();
@@ -189,7 +213,11 @@
         const u = document.getElementById('userName').value.trim().toUpperCase();
         const i = document.getElementById('userId').value.trim();
         const v = USUARIOS_AUTORIZADOS.find(user => user.nombre === u && user.id === i);
-        if(v) { localStorage.setItem('qc_user', v.nombre); localStorage.setItem('qc_id', v.id); location.reload(); }
+        if(v) { 
+            localStorage.setItem('qc_user', v.nombre); 
+            localStorage.setItem('qc_id', v.id); 
+            location.reload(); 
+        }
     }
 
     function verificarSession() {
@@ -199,7 +227,7 @@
             document.getElementById('display-id').innerText = localStorage.getItem('qc_id');
             cargarDatosNube();
             setInterval(cargarDatosNube, 5000);
-            setInterval(checkAutoLimpieza, 15000);
+            setInterval(checkAutoLimpieza, 20000);
             setInterval(() => {
                 document.querySelectorAll('.card').forEach(c => {
                     const inicio = c.getAttribute('data-reloj-inicio');
@@ -217,7 +245,7 @@
             activarPausa();
             btn.closest('.card').remove();
             guardarNube();
-        } else { alert("Clave incorrecta"); }
+        }
     }
 
     function limpiarConClave() {
