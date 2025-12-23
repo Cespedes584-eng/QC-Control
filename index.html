@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>QC Control PRO - Prueba 18:07</title>
+    <title>QC Control PRO - Fix Final</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #002b36; color: white; margin: 0; padding: 15px; }
         .user-bar { background: #073642; padding: 10px; display: flex; justify-content: space-between; border-bottom: 2px solid #268bd2; align-items: center; }
@@ -72,8 +72,11 @@
 </div>
 
 <div id="historial" class="view">
-    <div style="padding:10px;">
-        <button onclick="exportarCSV()" style="background:#859900; color:white; padding:10px 20px; border:none; border-radius:4px; margin-bottom:10px;">📊 EXCEL</button>
+    <div style="padding:15px; background: #073642; border-radius: 8px; margin: 10px;">
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <input type="text" id="searchHistorial" placeholder="🔍 Buscar en historial..." oninput="filtrarHistorial()" style="padding:10px; flex-grow: 1; border-radius: 4px; border: none;">
+            <button onclick="exportarCSV()" style="background:#859900; color:white; padding:10px 20px; border:none; border-radius:4px; font-weight: bold; cursor: pointer;">📊 EXCEL</button>
+        </div>
         <table>
             <thead><tr><th>Fecha</th><th>Lote</th><th>Inspector</th><th>T. Espera</th><th>T. Revisión</th><th>T. Total</th></tr></thead>
             <tbody id="cuerpoHistorial"></tbody>
@@ -158,7 +161,7 @@
         guardarNube();
     }
 
-    function activarPausa() { pausaSincro = true; setTimeout(() => { pausaSincro = false; }, 10000); }
+    function activarPausa() { pausaSincro = true; setTimeout(() => { pausaSincro = false; }, 12000); }
 
     function guardarNube() {
         const data = { e: document.getElementById('id-espera').innerHTML, p: document.getElementById('id-proceso').innerHTML, t: document.getElementById('id-terminado').innerHTML, h: document.getElementById('cuerpoHistorial').innerHTML };
@@ -177,16 +180,15 @@
         } catch(e) {}
     }
 
-    // PRUEBA 18:07
-    function limpieza4AM() {
+    // --- LOGICA DE LIMPIEZA AUTOMATICA (HORA DE PRUEBA: 18:18) ---
+    function limpiezaAutomatica() {
         const ahora = new Date();
-        if(ahora.getHours() === 18 && ahora.getMinutes() === 07) { 
-            if(!pausaSincro) { 
-                pausaSincro = true; // Bloquea descargas
+        if(ahora.getHours() === 18 && ahora.getMinutes() === 18) {
+            if(!pausaSincro) {
+                activarPausa(); 
                 document.getElementById('id-terminado').innerHTML = ""; 
                 guardarNube(); 
-                console.log("LIMPIEZA EXITOSA");
-                setTimeout(() => { pausaSincro = false; }, 15000); // Libera después de que pase el minuto
+                console.log("SISTEMA LIMPIO.");
             }
         }
     }
@@ -198,7 +200,7 @@
             document.getElementById('display-id').innerText = localStorage.getItem('qc_id');
             cargarDatosNube(); 
             setInterval(cargarDatosNube, 5000);
-            setInterval(limpieza4AM, 1000); 
+            setInterval(limpiezaAutomatica, 1000); 
             setInterval(() => {
                 document.querySelectorAll('.card').forEach(c => {
                     const inicio = c.getAttribute('data-reloj-inicio');
@@ -214,18 +216,29 @@
     function limpiarConClave() { if(prompt("Clave:") === CLAVE_ADMIN) { document.getElementById('id-espera').innerHTML=""; document.getElementById('id-proceso').innerHTML=""; document.getElementById('id-terminado').innerHTML=""; guardarNube(); } }
     function eliminarLote(btn) { if(prompt("Contraseña:") === CLAVE_ADMIN) { btn.closest('.card').remove(); guardarNube(); } }
     function cambiarTab(id, btn) { document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById(id).classList.add('active'); document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); }
+    
     function filtrarFlujo() {
         const q = document.getElementById('searchFlujo').value.toLowerCase();
-        document.querySelectorAll('.card').forEach(c => c.style.display = c.innerText.toLowerCase().includes(q) ? "block" : "none");
+        document.querySelectorAll('#flujo .card').forEach(c => c.style.display = c.innerText.toLowerCase().includes(q) ? "block" : "none");
     }
+
+    function filtrarHistorial() {
+        const q = document.getElementById('searchHistorial').value.toLowerCase();
+        document.querySelectorAll('#cuerpoHistorial tr').forEach(row => {
+            row.style.display = row.innerText.toLowerCase().includes(q) ? "" : "none";
+        });
+    }
+
     function exportarCSV() {
         let csv = "\uFEFF";
         document.querySelectorAll("table tr").forEach(f => {
-            csv += Array.from(f.querySelectorAll("th, td")).map(c => `"${c.innerText}"`).join(",") + "\r\n";
+            if(f.style.display !== "none") {
+                csv += Array.from(f.querySelectorAll("th, td")).map(c => `"${c.innerText}"`).join(",") + "\r\n";
+            }
         });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
-        link.download = "Reporte.csv";
+        link.download = "Reporte_QC.csv";
         link.click();
     }
 </script>
