@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>QC Control PRO - Seguridad Total</title>
+    <title>QC Control PRO - Final Corregido</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #002b36; color: white; margin: 0; padding: 15px; }
         .user-bar { background: #073642; padding: 10px; display: flex; justify-content: space-between; border-bottom: 2px solid #268bd2; align-items: center; }
@@ -16,7 +16,6 @@
         .login-box { background: #073642; padding: 40px; border: 1px solid #268bd2; text-align: center; border-radius: 8px; width: 320px; }
         .login-box input { display: block; margin: 15px auto; padding: 12px; width: 90%; border-radius: 4px; border: none; font-size: 16px; }
         .btn-login { background: #859900; color: white; padding: 12px 60px; border: none; cursor: pointer; font-weight: bold; border-radius: 4px; width: 100%; }
-        #error-login { color: #dc3545; font-size: 14px; margin-top: 10px; display: none; font-weight: bold; }
 
         .top-bar { display: grid; grid-template-columns: 1fr 2fr 1fr; align-items: center; background: #073642; padding: 15px; border-radius: 8px; margin-bottom: 20px; gap: 20px; }
         .input-lote { padding: 12px; border-radius: 4px; border: none; width: 280px; font-size: 16px; font-weight: bold; }
@@ -24,7 +23,7 @@
         .column { background: #073642; width: 33.33%; min-height: 600px; border-radius: 5px; border: 1px solid #586e75; }
         .column h2 { text-align: center; font-size: 14px; background: #002b36; margin: 0; padding: 12px; color: #93a1a1; }
         
-        .card { background: white; color: #333; margin: 12px; padding: 15px; border-radius: 4px; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .card { background: white; color: #333; margin: 12px; padding: 15px; border-radius: 4px; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: all 0.3s; }
         .card h3 { margin: 0 0 5px 0; font-size: 18px; color: #000; font-weight: 800; }
         .btn-action { width: 100%; margin-top: 10px; padding: 12px; border: none; color: white; cursor: pointer; font-weight: 900; border-radius: 4px; text-transform: uppercase; }
         .btn-delete { position: absolute; top: 5px; right: 5px; background: none; border: none; color: #ccc; cursor: pointer; font-size: 18px; }
@@ -43,7 +42,6 @@
         <input type="text" id="userName" placeholder="Nombre Completo">
         <input type="password" id="userId" placeholder="ID de Empleado">
         <button class="btn-login" onclick="iniciarSesion()">ACCEDER</button>
-        <p id="error-login">⚠️ Acceso Denegado: Datos incorrectos</p>
     </div>
 </div>
 
@@ -76,9 +74,6 @@
 <div id="historial" class="view">
     <div class="top-bar">
         <input type="text" id="searchHistorial" placeholder="🔍 Buscar en historial..." oninput="filtrarHistorial()" style="padding:10px;">
-        <div style="text-align: center;">
-            <h3 style="margin:0; color:#93a1a1; font-size:14px;">HISTORIAL PERMANENTE</h3>
-        </div>
         <button onclick="exportarCSV()" style="background:#859900; color:white; padding:10px 20px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">📊 EXCEL</button>
     </div>
     <div style="padding:10px; background: #073642; border-radius: 8px;">
@@ -103,36 +98,33 @@
         return `${Math.floor(s / 60)}m ${s % 60}s`;
     }
 
-    function checkAutoLimpieza() {
-        const ahora = Date.now();
-        const unaHora = 60 * 60 * 1000; 
-        let cambios = false;
-        document.querySelectorAll('#id-terminado .card').forEach(card => {
-            const finTimestamp = parseInt(card.getAttribute('data-fin-timestamp'));
-            if (finTimestamp && (ahora - finTimestamp > unaHora)) {
-                card.remove();
-                cambios = true;
-            }
-        });
-        if (cambios) { guardarNube(); }
-    }
-
     async function enviarTeams(lote) {
-        const body = { "type": "message", "attachments": [{ "contentType": "application/vnd.microsoft.card.adaptive", "content": { "type": "AdaptiveCard", "body": [{"type": "TextBlock", "text": "📢 LOTE REGISTRADO", "weight": "Bolder", "color": "Accent"},{"type": "FactSet", "facts": [{"title": "Lote:", "value": lote}, {"title": "Inspector:", "value": localStorage.getItem('qc_user')}]}], "$schema": "http://adaptivecards.io/schemas/adaptive-card.json", "version": "1.4" }}]};
-        fetch(URL_TEAMS, { method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } }).catch(() => {});
+        const datos = { "lote": lote, "inspector": localStorage.getItem('qc_user'), "fecha": new Date().toLocaleString() };
+        fetch(URL_TEAMS, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) }).catch(() => {});
     }
 
-    function iniciarSesion() {
-        const u = document.getElementById('userName').value.trim().toUpperCase();
-        const i = document.getElementById('userId').value.trim();
-        const v = USUARIOS_AUTORIZADOS.find(user => user.nombre === u && user.id === i);
-        if(v) { 
-            localStorage.setItem('qc_user', v.nombre); 
-            localStorage.setItem('qc_id', v.id); 
-            location.reload(); 
-        } else {
-            document.getElementById('error-login').style.display = 'block';
-        }
+    function activarPausa() { 
+        pausaSincro = true; 
+        setTimeout(() => { pausaSincro = false; }, 10000); // Pausa de 10 seg para evitar el "rebote"
+    }
+
+    function guardarNube() {
+        const data = { e: document.getElementById('id-espera').innerHTML, p: document.getElementById('id-proceso').innerHTML, t: document.getElementById('id-terminado').innerHTML, h: document.getElementById('cuerpoHistorial').innerHTML };
+        fetch(URL_NUBE, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
+    }
+
+    async function cargarDatosNube() {
+        if(pausaSincro) return;
+        try {
+            const res = await fetch(URL_NUBE);
+            const d = await res.json();
+            if(!pausaSincro) { // Doble check
+                document.getElementById('id-espera').innerHTML = d.e || "";
+                document.getElementById('id-proceso').innerHTML = d.p || "";
+                document.getElementById('id-terminado').innerHTML = d.t || "";
+                document.getElementById('cuerpoHistorial').innerHTML = d.h || "";
+            }
+        } catch(e) {}
     }
 
     function agregarLote() {
@@ -182,23 +174,22 @@
         guardarNube();
     }
 
-    function activarPausa() { pausaSincro = true; setTimeout(() => { pausaSincro = false; }, 5000); }
-
-    function guardarNube() {
-        const data = { e: document.getElementById('id-espera').innerHTML, p: document.getElementById('id-proceso').innerHTML, t: document.getElementById('id-terminado').innerHTML, h: document.getElementById('cuerpoHistorial').innerHTML };
-        fetch(URL_NUBE, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
+    function checkAutoLimpieza() {
+        const ahora = Date.now();
+        const unaHora = 60 * 60 * 1000; 
+        let cambios = false;
+        document.querySelectorAll('#id-terminado .card').forEach(card => {
+            const fin = parseInt(card.getAttribute('data-fin-timestamp'));
+            if (fin && (ahora - fin > unaHora)) { card.remove(); cambios = true; }
+        });
+        if (cambios) { guardarNube(); }
     }
 
-    async function cargarDatosNube() {
-        if(pausaSincro) return;
-        try {
-            const res = await fetch(URL_NUBE);
-            const d = await res.json();
-            document.getElementById('id-espera').innerHTML = d.e || "";
-            document.getElementById('id-proceso').innerHTML = d.p || "";
-            document.getElementById('id-terminado').innerHTML = d.t || "";
-            document.getElementById('cuerpoHistorial').innerHTML = d.h || "";
-        } catch(e) {}
+    function iniciarSesion() {
+        const u = document.getElementById('userName').value.trim().toUpperCase();
+        const i = document.getElementById('userId').value.trim();
+        const v = USUARIOS_AUTORIZADOS.find(user => user.nombre === u && user.id === i);
+        if(v) { localStorage.setItem('qc_user', v.nombre); localStorage.setItem('qc_id', v.id); location.reload(); }
     }
 
     function verificarSession() {
@@ -208,7 +199,7 @@
             document.getElementById('display-id').innerText = localStorage.getItem('qc_id');
             cargarDatosNube();
             setInterval(cargarDatosNube, 5000);
-            setInterval(checkAutoLimpieza, 10000); 
+            setInterval(checkAutoLimpieza, 15000);
             setInterval(() => {
                 document.querySelectorAll('.card').forEach(c => {
                     const inicio = c.getAttribute('data-reloj-inicio');
@@ -218,6 +209,24 @@
                     }
                 });
             }, 1000);
+        }
+    }
+
+    function eliminarLote(btn) {
+        if(prompt("Clave para eliminar lote:") === CLAVE_ADMIN) {
+            activarPausa();
+            btn.closest('.card').remove();
+            guardarNube();
+        } else { alert("Clave incorrecta"); }
+    }
+
+    function limpiarConClave() {
+        if(prompt("Clave para vaciar tablero:") === CLAVE_ADMIN) {
+            activarPausa();
+            document.getElementById('id-espera').innerHTML="";
+            document.getElementById('id-proceso').innerHTML="";
+            document.getElementById('id-terminado').innerHTML="";
+            guardarNube();
         }
     }
 
@@ -235,9 +244,7 @@
 
     function filtrarHistorial() {
         const q = document.getElementById('searchHistorial').value.toLowerCase();
-        document.querySelectorAll('#cuerpoHistorial tr').forEach(row => {
-            row.style.display = row.innerText.toLowerCase().includes(q) ? "" : "none";
-        });
+        document.querySelectorAll('#cuerpoHistorial tr').forEach(row => row.style.display = row.innerText.toLowerCase().includes(q) ? "" : "none");
     }
 
     function exportarCSV() {
@@ -252,28 +259,6 @@
     }
 
     function cerrarSesion() { localStorage.clear(); location.reload(); }
-    
-    // --- SEGURIDAD AL BORRAR ---
-    function limpiarConClave() { 
-        if(prompt("Clave de Administrador para vaciar todo:") === CLAVE_ADMIN) { 
-            document.getElementById('id-espera').innerHTML=""; 
-            document.getElementById('id-proceso').innerHTML=""; 
-            document.getElementById('id-terminado').innerHTML=""; 
-            guardarNube(); 
-        } else {
-            alert("Clave Incorrecta");
-        }
-    }
-
-    function eliminarLote(btn) { 
-        if(prompt("Ingrese clave para eliminar este lote:") === CLAVE_ADMIN) { 
-            activarPausa();
-            btn.closest('.card').remove(); 
-            guardarNube(); 
-        } else {
-            alert("Acción cancelada: Clave incorrecta");
-        }
-    }
 </script>
 </body>
 </html>
